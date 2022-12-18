@@ -9,10 +9,10 @@ public class DebugController : MonoBehaviour
 
     public void ToogleDebug()
     {
-        foreach(GameObject g in _debugObjects)
+        foreach (GameObject g in _debugObjects)
         {
             g.SetActive(!active);
         }
-            active = !active;
+        active = !active;
     }
 }
