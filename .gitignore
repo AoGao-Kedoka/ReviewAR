@@ -74,3 +74,4 @@ crashlytics-build.properties
 # IDE
 .vs/
 .idea/
+.vsconfig
