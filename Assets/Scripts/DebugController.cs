@@ -5,7 +5,7 @@ using TMPro;
 
 public class DebugController : MonoBehaviour
 {
-    private bool active = false;
+    private bool active = true;
     [SerializeField] private List<GameObject> _debugObjects;
     [SerializeField] private TMP_Text _debugText;
 
@@ -20,7 +20,7 @@ public class DebugController : MonoBehaviour
 
     public void UpdateDebugMessage(string message)
     {
-        if (active)
-            _debugText.text += message;
+        _debugText.text = message;
+        Debug.Log(message);
     }
 }

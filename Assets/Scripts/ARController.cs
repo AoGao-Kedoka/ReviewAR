@@ -2,6 +2,7 @@ using Google.XR.ARCoreExtensions;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 using TMPro;
 
 #if UNTIY_ANDROID
@@ -11,18 +12,25 @@ using TMPro;
 public class ARController : MonoBehaviour
 {
     [Header("AR Properties")]
-    [SerializeField] private ARSessionOrigin    _arOrigin;
-    [SerializeField] private ARSession          _arSession;
-    [SerializeField] private ARCoreExtensions   _arExtensions;
+    [SerializeField] private ARSessionOrigin _arOrigin;
+    [SerializeField] private ARSession _arSession;
+    [SerializeField] private ARCoreExtensions _arExtensions;
 
     [Header("Geospatial Properties")]
-    [SerializeField] private ARAnchorManager    _arAnchorManager;
-    [SerializeField] private ARRaycastManager   _arRaycastManager;
-    [SerializeField] private AREarthManager     _arEarthManager;
+    [SerializeField] private ARAnchorManager _arAnchorManager;
+    [SerializeField] private ARRaycastManager _arRaycastManager;
+    [SerializeField] private AREarthManager _arEarthManager;
 
     [Header("Debug")]
-    [SerializeField] private DebugController    _debugController; 
-    
+    [SerializeField] private DebugController _debugController;
+
+    [Header("Others")]
+    [SerializeField] private UIController _uiController;
+
+    private const double _orientationYawAccuracyThreshold = 25;
+    private const double _headingAccuracyThreshold = 25;
+    private const double _horizontalAccuracyThreshold = 20;
+
     private void Awake()
     {
         // Lock app orientation
@@ -47,6 +55,8 @@ public class ARController : MonoBehaviour
         {
             Debug.LogError("Cannot find ARCoreExtensions.");
         }
+
+        _debugController.UpdateDebugMessage("Awake finished");
     }
 
     private void OnEnable()
@@ -64,20 +74,23 @@ public class ARController : MonoBehaviour
         var featureSupport = _arEarthManager.IsGeospatialModeSupported(GeospatialMode.Enabled);
         switch (featureSupport)
         {
-                case FeatureSupported.Unknown:
+            case FeatureSupported.Unknown:
+                _debugController.UpdateDebugMessage("FeatureSupport unknown");
+                return;
+            case FeatureSupported.Unsupported:
+                _debugController.UpdateDebugMessage("FeatureSupport unsupported");
+                return;
+            case FeatureSupported.Supported:
+                _debugController.UpdateDebugMessage("FeatureSupport supported");
+                if (_arExtensions.ARCoreExtensionsConfig.GeospatialMode ==
+                    GeospatialMode.Disabled)
+                {
+                    _debugController.UpdateDebugMessage("Geospatial sample switched to GeospatialMode.Enabled.");
+                    _arExtensions.ARCoreExtensionsConfig.GeospatialMode =
+                        GeospatialMode.Enabled;
                     return;
-                case FeatureSupported.Unsupported:
-                    return;
-                case FeatureSupported.Supported:
-                    if (_arExtensions.ARCoreExtensionsConfig.GeospatialMode ==
-                        GeospatialMode.Disabled)
-                    {
-                        Debug.Log("Geospatial sample switched to GeospatialMode.Enabled.");
-                        _arExtensions.ARCoreExtensionsConfig.GeospatialMode =
-                            GeospatialMode.Enabled;
-                        return;
-                    }
-                    break;
+                }
+                break;
         }
 
         StartCoroutine(Waiter(3));
@@ -86,6 +99,7 @@ public class ARController : MonoBehaviour
         var earchState = _arEarthManager.EarthState;
         if (earchState == EarthState.ErrorEarthNotReady)
         {
+            _debugController.UpdateDebugMessage("Earth not ready");
             return;
         }
         else if (earchState != EarthState.Enabled)
@@ -97,6 +111,43 @@ public class ARController : MonoBehaviour
         {
             _debugController.UpdateDebugMessage("EarchState: " + earchState);
         }
+
+        // Check earth localization
+        bool isSessionReady = ARSession.state == ARSessionState.SessionTracking && Input.location.status == LocationServiceStatus.Running;
+        var earthTrackingState = _arEarthManager.EarthTrackingState;
+        var pose = earthTrackingState == TrackingState.Tracking ? _arEarthManager.CameraGeospatialPose : new GeospatialPose();
+        string location_message = "";
+        if (_arEarthManager.EarthTrackingState == TrackingState.Tracking)
+        {
+            location_message = string.Format(
+                "Latitude/Longitude: {0}°, {1}°\n" +
+                "Horizontal Accuracy: {2}m\n" +
+                "Altitude: {3}m\n" +
+                "Vertical Accuracy: {4}m\n" +
+                "Eun Rotation: {5}\n" +
+                "Orientation Yaw Accuracy: {6}°\n",
+                pose.Latitude.ToString(),
+                pose.Longitude.ToString(),
+                pose.HorizontalAccuracy.ToString(),
+                pose.Altitude.ToString(),
+                pose.VerticalAccuracy.ToString(),
+                pose.EunRotation.ToString(),
+                pose.OrientationYawAccuracy.ToString());
+        }
+        if (isSessionReady && earthTrackingState == TrackingState.Tracking &&
+            pose.OrientationYawAccuracy < _orientationYawAccuracyThreshold &&
+            pose.HorizontalAccuracy < _horizontalAccuracyThreshold)
+        {
+            _uiController.DisableLocalizationImage();
+            _debugController.UpdateDebugMessage("localized!\n" + location_message);
+            //TODO: Localized!, do the real app tricks
+        }
+        else
+        {
+            _uiController.EnableLocalizationImage();
+            _debugController.UpdateDebugMessage("Point camera at buildings, stores and signs near you\n" + location_message);
+        }
+
     }
 
     private IEnumerator StartLocationService()
