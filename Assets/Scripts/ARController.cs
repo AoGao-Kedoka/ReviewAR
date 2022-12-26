@@ -38,6 +38,7 @@ public class ARController : MonoBehaviour
         Screen.autorotateToLandscapeRight = false;
         Screen.autorotateToPortraitUpsideDown = false;
         Screen.orientation = ScreenOrientation.Portrait;
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
 
         // Check AR game objects
