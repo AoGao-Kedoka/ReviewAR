@@ -20,7 +20,7 @@ public class BusinessData : MonoBehaviour
     // main(){
     //  var reviews = GetPlaces(-10.02, 30.1).Reuslt(); 
     // }
-    static async Task<PlacesApiQueryResponse> GetPlaces(float latitude, float longitude)
+    static async public Task<PlacesApiQueryResponse> GetPlaces(float latitude, float longitude)
     {
         using HttpResponseMessage response = await BusinessData.httpClient.GetAsync(String.Format
             ("nearbysearch/json?location={0}%2C{1}&key={2}"
