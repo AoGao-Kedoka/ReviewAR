@@ -6,9 +6,10 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using UnityEngine;
-public class BussinessData : MonoBehaviour
+public class BusinessData : MonoBehaviour
 {
-    static string apiKey = "API_KEY";
+
+    private static string apiKey = "";
 
     private static HttpClient httpClient = new ()
     {
@@ -21,7 +22,7 @@ public class BussinessData : MonoBehaviour
     // }
     static async Task<PlacesApiQueryResponse> GetPlaces(float latitude, float longitude)
     {
-        using HttpResponseMessage response = await BussinessData.httpClient.GetAsync(String.Format
+        using HttpResponseMessage response = await BusinessData.httpClient.GetAsync(String.Format
             ("nearbysearch/json?location={0}%2C{1}&key={2}"
             ,latitude, longitude, apiKey));
 
@@ -30,5 +31,15 @@ public class BussinessData : MonoBehaviour
         return JsonConvert.DeserializeObject<PlacesApiQueryResponse>(await response.Content.ReadAsStringAsync());
 
     }
-
+    private void Awake()
+    {
+        TextAsset file = Resources.Load<TextAsset>("Keys");
+        if (file != null)
+        {
+            Debug.Log(file.text.Split('=')[1]);
+        }
+        else {
+            Application.Quit();
+        }
+    }
 }

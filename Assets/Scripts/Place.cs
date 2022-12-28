@@ -44,5 +44,8 @@ public class Place
     [JsonProperty("rating")]
     public DateTime OpeningHours { get; }
 
+    public float spawnLatitude;
+    public float spawnLongitude;
+
 
 }
