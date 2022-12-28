@@ -75,3 +75,7 @@ crashlytics-build.properties
 .vs/
 .idea/
 .vsconfig
+
+# Customizedes/key.conf
+/Assets/Resources/Keys.conf
+/Assets/Resources/Keys.conf.meta

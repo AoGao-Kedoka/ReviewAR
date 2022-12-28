@@ -1,14 +1,17 @@
 using Google.XR.ARCoreExtensions;
 using System.Collections;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-using TMPro;
 
 #if UNTIY_ANDROID
     using UnityEngine.Android;
 #endif
 
+/// <summary>
+/// THIS IS THE MAIN SCRIPT OF THE PROJECT!
+/// </summary>
 public class ARController : MonoBehaviour
 {
     [Header("AR Properties")]
@@ -16,19 +19,42 @@ public class ARController : MonoBehaviour
     [SerializeField] private ARSession _arSession;
     [SerializeField] private ARCoreExtensions _arExtensions;
 
+    /// <summary>
+    /// AR Anchor Manager from ARFoundation Extension
+    /// </summary>
     [Header("Geospatial Properties")]
     [SerializeField] private ARAnchorManager _arAnchorManager;
+
+    /// <summary>
+    /// AR Raycast Manager from ARFoundation
+    /// </summary>
     [SerializeField] private ARRaycastManager _arRaycastManager;
+
+    /// <summary>
+    /// AR Earth Manager from ARFoundation Extension
+    /// </summary>
     [SerializeField] private AREarthManager _arEarthManager;
 
+    /// <summary>
+    /// Debug controller for logging, calling `_debugController.UpdateDebugMessage()` will
+    /// update debug message on panel and log into logcat 
+    /// </summary>
     [Header("Debug")]
     [SerializeField] private DebugController _debugController;
 
-    [Header("Others")]
+    /// <summary>
+    /// UI controller for controlling all the UI
+    /// </summary>
     [SerializeField] private UIController _uiController;
 
+    /// <summary>
+    /// orientation yaw accuracy threshold for checking whether camera helps with the localization
+    /// </summary>
     private const double _orientationYawAccuracyThreshold = 25;
-    private const double _headingAccuracyThreshold = 25;
+
+    /// <summary>
+    /// horizontal accuracy threshold for checking whether camera helps with the localization
+    /// </summary>
     private const double _horizontalAccuracyThreshold = 20;
 
     private void Awake()
@@ -71,16 +97,33 @@ public class ARController : MonoBehaviour
 
     void Update()
     {
+        EnableGeospatial();
+
+        // fetch business data
+        Task<PlacesApiQueryResponse> reviews;
+        if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
+            reviews = BusinessData.GetPlaces((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
+        
+        // TODO: Calculate reviews location
+    }
+
+
+    /// <summary>
+    /// Enable all the Geospatial functionality for our app
+    /// </summary>
+    /// <returns>True when sucess</returns>
+    private bool EnableGeospatial()
+    {
         // Enable Geospatial mode
         var featureSupport = _arEarthManager.IsGeospatialModeSupported(GeospatialMode.Enabled);
         switch (featureSupport)
         {
             case FeatureSupported.Unknown:
                 _debugController.UpdateDebugMessage("FeatureSupport unknown");
-                return;
+                return false;
             case FeatureSupported.Unsupported:
                 _debugController.UpdateDebugMessage("FeatureSupport unsupported");
-                return;
+                return false;
             case FeatureSupported.Supported:
                 _debugController.UpdateDebugMessage("FeatureSupport supported");
                 if (_arExtensions.ARCoreExtensionsConfig.GeospatialMode ==
@@ -89,7 +132,7 @@ public class ARController : MonoBehaviour
                     _debugController.UpdateDebugMessage("Geospatial sample switched to GeospatialMode.Enabled.");
                     _arExtensions.ARCoreExtensionsConfig.GeospatialMode =
                         GeospatialMode.Enabled;
-                    return;
+                    return false;
                 }
                 break;
         }
@@ -101,12 +144,12 @@ public class ARController : MonoBehaviour
         if (earchState == EarthState.ErrorEarthNotReady)
         {
             _debugController.UpdateDebugMessage("Earth not ready");
-            return;
+            return false;
         }
         else if (earchState != EarthState.Enabled)
         {
             _debugController.UpdateDebugMessage("Geospatial sample encountered an EarthState error: " + earchState);
-            return;
+            return false;
         }
         else
         {
@@ -135,20 +178,15 @@ public class ARController : MonoBehaviour
                 pose.EunRotation.ToString(),
                 pose.OrientationYawAccuracy.ToString());
         }
-        if (isSessionReady && earthTrackingState == TrackingState.Tracking &&
-            pose.OrientationYawAccuracy < _orientationYawAccuracyThreshold &&
-            pose.HorizontalAccuracy < _horizontalAccuracyThreshold)
-        {
-            _uiController.DisableLocalizationImage();
-            _debugController.UpdateDebugMessage("localized!\n" + location_message);
-            //TODO: Localized!, do the real app tricks
-        }
-        else
+        if (!isSessionReady || earthTrackingState != TrackingState.Tracking ||
+            pose.OrientationYawAccuracy > _orientationYawAccuracyThreshold ||
+            pose.HorizontalAccuracy > _horizontalAccuracyThreshold)
         {
             _uiController.EnableLocalizationImage();
             _debugController.UpdateDebugMessage("Point camera at buildings, stores and signs near you\n" + location_message);
+            return false;
         }
-
+        return true;
     }
 
     private IEnumerator StartLocationService()

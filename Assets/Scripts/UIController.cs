@@ -8,6 +8,9 @@ public class UIController : MonoBehaviour
 {
     [SerializeField] private Image _localizingImage;
 
+    /// <summary>
+    /// Enable localizing icon in the center of screen
+    /// </summary>
     public void EnableLocalizationImage()
     {
         if (!_localizingImage.gameObject.activeSelf)
@@ -17,6 +20,9 @@ public class UIController : MonoBehaviour
         }
     }
     
+    /// <summary>
+    /// Disable localizing icon
+    /// </summary>
     public void DisableLocalizationImage()
     {
         _localizingImage.gameObject.SetActive(false);

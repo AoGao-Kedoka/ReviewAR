@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using UnityEngine;
+
 public class Place
 {
     /// <summary>
@@ -45,6 +47,5 @@ public class Place
     public DateTime OpeningHours { get; }
 
     public Vector3 position;
-
 
 }
