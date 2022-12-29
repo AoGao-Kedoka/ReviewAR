@@ -70,6 +70,10 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+/[Aa]ssets/Plugins/Android/*.aar
+/[Aa]ssets/Plugins/Android/*.aar.meta
+/[Aa]ssets/Plugins/Android/*.jar
+/[Aa]ssets/Plugins/Android/*.jar.meta
 
 # IDE
 .vs/
@@ -77,5 +81,5 @@ crashlytics-build.properties
 .vsconfig
 
 # Customizedes/key.conf
-/Assets/Resources/Keys.conf
-/Assets/Resources/Keys.conf.meta
+/Assets/Resources/Keys.txt
+/Assets/Resources/Keys.txt.meta

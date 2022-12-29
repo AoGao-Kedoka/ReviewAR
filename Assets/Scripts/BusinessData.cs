@@ -9,7 +9,7 @@ using UnityEngine;
 public class BusinessData : MonoBehaviour
 {
 
-    private static string apiKey = "";
+    private static string apiKey = null;
 
     private static HttpClient httpClient = new ()
     {
@@ -22,6 +22,7 @@ public class BusinessData : MonoBehaviour
     // }
     static async public Task<PlacesApiQueryResponse> GetPlaces(float latitude, float longitude)
     {
+        if (apiKey == null) { Application.Quit(); }
         using HttpResponseMessage response = await BusinessData.httpClient.GetAsync(String.Format
             ("nearbysearch/json?location={0}%2C{1}&key={2}"
             ,latitude, longitude, apiKey));
@@ -31,12 +32,13 @@ public class BusinessData : MonoBehaviour
         return JsonConvert.DeserializeObject<PlacesApiQueryResponse>(await response.Content.ReadAsStringAsync());
 
     }
-    private void Awake()
+    private void OnEnable()
     {
+        // Load config file
         TextAsset file = Resources.Load<TextAsset>("Keys");
         if (file != null)
         {
-            Debug.Log(file.text.Split('=')[1]);
+            apiKey = file.text.Split('=')[1];
         }
         else {
             Application.Quit();

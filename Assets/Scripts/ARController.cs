@@ -102,13 +102,13 @@ public class ARController : MonoBehaviour
         if (!enabled) return;
 
         // fetch business data
-        // Task<PlacesApiQueryResponse> reviews = null;
-        // if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
-        //     reviews = BusinessData.GetPlaces((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
+        Task<PlacesApiQueryResponse> reviews = null;
+        if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
+            reviews = BusinessData.GetPlaces((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
 
         // TODO: Calculate reviews location
-        // if (reviews == null) { return; }
-        // List<Place> places = reviews.Result.Places;
+        if (reviews == null) { return; }
+        List<Place> places = reviews.Result.Places;
     }
 
 
