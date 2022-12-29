@@ -1,5 +1,6 @@
 using Google.XR.ARCoreExtensions;
 using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -97,14 +98,17 @@ public class ARController : MonoBehaviour
 
     void Update()
     {
-        EnableGeospatial();
+        bool enabled = EnableGeospatial();
+        if (!enabled) return;
 
         // fetch business data
-        Task<PlacesApiQueryResponse> reviews;
-        if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
-            reviews = BusinessData.GetPlaces((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
-        
+        // Task<PlacesApiQueryResponse> reviews = null;
+        // if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
+        //     reviews = BusinessData.GetPlaces((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
+
         // TODO: Calculate reviews location
+        // if (reviews == null) { return; }
+        // List<Place> places = reviews.Result.Places;
     }
 
 
