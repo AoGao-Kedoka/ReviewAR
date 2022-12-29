@@ -9,42 +9,42 @@ public class Place
     /// Business name. eg: "Sergio Tapia, John Cosack, Lucy McMillan", optional
     /// </summary>
     [JsonProperty("name")]
-    public string Name { get; }
+    public string Name { get; set; }
 
     /// <summary>
     /// World coordinates, optional
     /// </summary>
     [JsonProperty("geometry")]
-    public string Geometry { get; }
+    public Geometry Geometry { get; set; }
 
     /// <summary>
     /// Unique identifier, optional
     /// </summary>
     [JsonProperty("place_id")]
-    public string Place_id { get; }
+    public string Place_id { get; set; }
 
     /// <summary>
     /// Business reviews, optional
     /// </summary>
     [JsonProperty("reviews")]
-    public List<Review> Reviews { get; }
+    public List<Review> Reviews { get; set; }
 
     /// <summary>
     /// Price level, 0-4 from least to most expensive, optional
     /// </summary>
     [JsonProperty("price_level")]
-    public float Price_level { get; }
+    public float Price_level { get; set; }
     /// <summary>
     /// Contains the place's rating, from 1.0 to 5.0, based on aggregated user reviews, optional
     /// </summary>
     [JsonProperty("rating")]
-    public float Rating { get; }
+    public float Rating { get; set; }
 
     /// <summary>
     /// Opening hours, optional, might be wrong?
     /// </summary>
-    [JsonProperty("rating")]
-    public DateTime OpeningHours { get; }
+    [JsonProperty("opening_hours")]
+    public OpeningHours OpeningHours { get; set; }
 
     public Vector3 position;
 

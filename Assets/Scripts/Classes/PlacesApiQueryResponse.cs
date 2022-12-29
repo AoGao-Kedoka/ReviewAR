@@ -7,5 +7,5 @@ public class PlacesApiQueryResponse
     /// All the places found in proximity
     /// </summary>
     [JsonProperty("results")]
-    public List<Place> Places { get; }
+    public List<Place> Places { get; set; }
 }

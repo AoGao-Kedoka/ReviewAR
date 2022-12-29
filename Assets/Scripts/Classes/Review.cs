@@ -8,17 +8,17 @@ public class Review
     /// Author of review, optional
     /// </summary>
     [JsonProperty("author_name")]
-    public string Name { get; }
+    public string Name { get; set; }
 
     /// <summary>
     /// Rating for this review, optional
     /// </summary>
     [JsonProperty("rating")]
-    public string Rating { get; }
+    public string Rating { get; set; }
 
     /// <summary>
     /// Review text, optional
     /// </summary>
     [JsonProperty("text")]
-    public string Text { get; }
+    public string Text { get; set; }
 }

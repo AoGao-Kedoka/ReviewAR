@@ -28,15 +28,15 @@ public class BusinessData : MonoBehaviour
             , latitude, longitude, radius, apiKey)).ConfigureAwait(false);
 
         response.EnsureSuccessStatusCode();
-
-        return JsonConvert.DeserializeObject<PlacesApiQueryResponse>(await response.Content.ReadAsStringAsync());
+        var result_text = await response.Content.ReadAsStringAsync();
+        return JsonConvert.DeserializeObject<PlacesApiQueryResponse>(result_text);
 
     }
 
     [ContextMenu("Test")]
     public  void Call()
     {
-        var reviews = GetPlaces(10f, 11f, 10000).Result;
+        PlacesApiQueryResponse reviews = GetPlaces(10f, 11f, 10000).Result;
         Debug.Log(httpClient);
         Debug.Log(reviews);
     }
