@@ -104,7 +104,7 @@ public class ARController : MonoBehaviour
         // fetch business data
         Task<PlacesApiQueryResponse> reviews = null;
         if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
-            reviews = BusinessData.GetPlaces((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
+            reviews = BusinessData.GetPlaces((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude, 1000);
 
         // TODO: Calculate reviews location
         if (reviews == null) { return; }

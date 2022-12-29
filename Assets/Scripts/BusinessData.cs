@@ -6,32 +6,41 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEditor;
+
 public class BusinessData : MonoBehaviour
 {
 
     private static string apiKey = null;
 
-    private static HttpClient httpClient = new ()
-    {
-        BaseAddress = new System.Uri("https://maps.googleapis.com/maps/api/place"),
-    };
+    private static HttpClient httpClient = new HttpClient();
 
     // Example usage:
     // main(){
-    //  var reviews = GetPlaces(-10.02, 30.1).Reuslt(); 
+    //  var reviews = GetPlaces(-10.02, 30.1).Result; 
     // }
-    static async public Task<PlacesApiQueryResponse> GetPlaces(float latitude, float longitude)
+    static async public Task<PlacesApiQueryResponse> GetPlaces(float latitude, float longitude, int radius)
     {
         if (apiKey == null) { Application.Quit(); }
+
         using HttpResponseMessage response = await BusinessData.httpClient.GetAsync(String.Format
-            ("nearbysearch/json?location={0}%2C{1}&key={2}"
-            ,latitude, longitude, apiKey));
+            ("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={0}%2C{1}&radius={2}&key={3}"
+            , latitude, longitude, radius, apiKey)).ConfigureAwait(false);
 
         response.EnsureSuccessStatusCode();
 
         return JsonConvert.DeserializeObject<PlacesApiQueryResponse>(await response.Content.ReadAsStringAsync());
 
     }
+
+    [ContextMenu("Test")]
+    public  void Call()
+    {
+        var reviews = GetPlaces(10f, 11f, 10000).Result;
+        Debug.Log(httpClient);
+        Debug.Log(reviews);
+    }
+
     private void OnEnable()
     {
         // Load config file
@@ -39,6 +48,8 @@ public class BusinessData : MonoBehaviour
         if (file != null)
         {
             apiKey = file.text.Split('=')[1];
+            Debug.Log("Key: " + apiKey);
+
         }
         else {
             Application.Quit();
