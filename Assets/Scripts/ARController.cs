@@ -7,9 +7,7 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
-#if UNTIY_ANDROID
-    using UnityEngine.Android;
-#endif
+using UnityEngine.Android;
 
 /// <summary>
 /// THIS IS THE MAIN SCRIPT OF THE PROJECT!
@@ -55,6 +53,8 @@ public class ARController : MonoBehaviour
     /// </summary>
     [SerializeField] private UIController _uiController;
 
+    [SerializeField] private GameObject _reviewPlaceHolder;
+
     /// <summary>
     /// orientation yaw accuracy threshold for checking whether camera helps with the localization
     /// </summary>
@@ -66,9 +66,14 @@ public class ARController : MonoBehaviour
     private const double _horizontalAccuracyThreshold = 20;
 
     /// <summary>
-    ///  last saved latitude and longtitudevalue
+    /// last saved latitude and longtitudevalue
     /// </summary>
     private Vector2 _lastSavedPosition = Vector2.zero;
+
+    /// <summary>
+    /// places got from the api requests
+    /// </summary>
+    private PlacesApiQueryResponse _places = null;
 
     private void Awake()
     {
@@ -107,18 +112,38 @@ public class ARController : MonoBehaviour
         StartCoroutine(StartLocationService());
     }
 
-    void FixedUpdate()
+    private void Update()
     {
         LifecycleUpdate();
         bool enabled = EnableGeospatial();
-        //TODO: if (!enabled) return;
+        if (!enabled) return;
 
         // fetch business data
-        var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
-        if (TrackingState.Tracking == _arEarthManager.EarthTrackingState &&
-            ((_lastSavedPosition == Vector2.zero) || Vector2.Distance(currentPose, _lastSavedPosition) > 20.0f))
+        // var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
+        // if (TrackingState.Tracking == _arEarthManager.EarthTrackingState &&
+        //     ((_lastSavedPosition == Vector2.zero) || Vector2.Distance(currentPose, _lastSavedPosition) > 20.0f))
+        // {
+        //     var placesTask = BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius);
+        //     _lastSavedPosition = currentPose;
+        //     _places = placesTask.Result;
+        // }
+        // var message = (_places == null || _places.Places == null) ? "No places got from API" : _places.Places[0].Name;
+        // _debugController.AddDebugMessage(message);
+
+        // AR overlay
+        if (Input.touchCount > 0)
         {
-            StartCoroutine(FetchBusinessData(CalculatePosition, currentPose));
+            var position = Input.GetTouch(0).position;
+            List<ARRaycastHit> hitResults = new List<ARRaycastHit>();
+            _arRaycastManager.Raycast(position, hitResults, TrackableType.Planes | TrackableType.FeaturePoint);
+            if (hitResults.Count > 0)
+            {
+                _debugController.AddDebugMessage("Hit position: " + hitResults[0].pose);
+                GeospatialPose geospatialPose = _arEarthManager.Convert(hitResults[0].pose);
+                var anchor = _arAnchorManager.AddAnchor(geospatialPose.Latitude, geospatialPose.Longitude, geospatialPose.Latitude, geospatialPose.EunRotation);
+                _debugController.AddDebugMessage("Anchor position: " + anchor.transform.position);
+                Instantiate(_reviewPlaceHolder, anchor.transform);
+            }
         }
     }
 
@@ -250,22 +275,20 @@ public class ARController : MonoBehaviour
 
     private IEnumerator StartLocationService()
     {
-#if UNTIY_ANDROID
         if (!Permission.HasUserAuthorizedPermission(Permission.FineLocation))
         {
-            Debug.Log("Requesting fine location permission.");
+            _debugController.AddDebugMessage("Requesting fine location permission.");
             Permission.RequestUserPermission(Permission.FineLocation);
             yield return new WaitForSeconds(3.0f);
         }
-#endif
 
         if (!Input.location.isEnabledByUser)
         {
-            Debug.Log("Location service is disabled by User.");
+            _debugController.AddDebugMessage("Location service is disabled by User.");
             yield break;
         }
 
-        Debug.Log("Start location service.");
+        _debugController.AddDebugMessage("Start location service.");
         Input.location.Start();
 
         while (Input.location.status == LocationServiceStatus.Initializing)
@@ -275,28 +298,13 @@ public class ARController : MonoBehaviour
 
         if (Input.location.status != LocationServiceStatus.Running)
         {
-            Debug.LogWarningFormat(
-                "Location service ends with {0} status.", Input.location.status);
+            var message = string.Format("Location service ends with {0} status.", Input.location.status);
+            _debugController.AddDebugMessage(message);
             Input.location.Stop();
         }
     }
     private IEnumerator Waiter(float time)
     {
         yield return new WaitForSeconds(time);
-    }
-
-    private IEnumerator FetchBusinessData(Action<List<Place>> callback, Vector2 currentPose)
-    {
-        var reviews = BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius);
-        _lastSavedPosition = currentPose;
-
-        if (reviews == null) { yield return new WaitForSeconds(2); }
-        List<Place> places = reviews.Result.Places;
-        callback(places);
-    }
-
-    private void CalculatePosition(List<Place> places)
-    {
-        _debugController.UpdateDebugMessage(places[0].Name);
     }
 }
