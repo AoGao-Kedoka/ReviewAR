@@ -6,7 +6,23 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using UnityEngine;
+
+#if UNITY_EDITOR
 using UnityEditor;
+
+[CustomEditor(typeof(BusinessData))]
+public class ResourceChecker : Editor
+{
+    public override void OnInspectorGUI()
+    {
+        BusinessData business = (BusinessData)target;
+        TextAsset file = Resources.Load<TextAsset>("Keys");
+        if (file == null)
+            Debug.LogWarning("No config file found");
+    }
+    
+}
+#endif
 
 public class BusinessData : MonoBehaviour
 {
@@ -49,7 +65,6 @@ public class BusinessData : MonoBehaviour
         {
             apiKey = file.text.Split('=')[1];
             Debug.Log("Key: " + apiKey);
-
         }
         else {
             Application.Quit();

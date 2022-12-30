@@ -18,9 +18,23 @@ public class DebugController : MonoBehaviour
         active = !active;
     }
 
+    /// <summary>
+    /// clear panel and update debug message on the panel
+    /// </summary>
+    /// <param name="message"></param>
     public void UpdateDebugMessage(string message)
     {
         _debugText.text = message;
+        Debug.Log(message);
+    }
+
+    /// <summary>
+    /// add debug message on the panel without clearing the panel messages
+    /// </summary>
+    /// <param name="message"></param>
+    public void AddDebugMessage(string message)
+    {
+        _debugText.text += message;
         Debug.Log(message);
     }
 }
