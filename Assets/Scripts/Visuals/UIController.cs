@@ -7,7 +7,7 @@ using ElRaccoone.Tweens;
 public class UIController : MonoBehaviour
 {
     [SerializeField] private Image _localizingImage;
-
+    [SerializeField] GameObject InformationCanvas;
     /// <summary>
     /// Enable localizing icon in the center of screen
     /// </summary>
@@ -27,4 +27,19 @@ public class UIController : MonoBehaviour
     {
         _localizingImage.gameObject.SetActive(false);
     }
+
+
+    // TODO: need orientation from ao
+    //       also need to clarify who holds the objects
+    /// <summary>
+    /// Spawns all the panels
+    /// </summary>
+    public void SpawnPlaces(PlacesApiQueryResponse places) {
+        foreach (Place place in places.Places) {
+            var obj = Instantiate(this.InformationCanvas);
+            obj.transform.position = place.position;
+            obj.GetComponent<FillInformation>().FillInfo(place);
+        }
+    }
+
 }

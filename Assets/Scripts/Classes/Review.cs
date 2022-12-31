@@ -5,7 +5,7 @@ public class Review
 {
 
     /// <summary>
-    /// Author of review, optional
+    /// Author of review
     /// </summary>
     [JsonProperty("author_name")]
     public string Name { get; set; }

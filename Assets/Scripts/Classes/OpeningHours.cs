@@ -9,6 +9,6 @@ public class OpeningHours
     /// Open now optional
     /// </summary>
     [JsonProperty("open_now")]
-    public bool Open_now { get; set; }
+    public bool? Open_now { get; set; }
 
 }
