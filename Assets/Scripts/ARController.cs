@@ -142,7 +142,7 @@ public class ARController : MonoBehaviour
                 GeospatialPose geospatialPose = _arEarthManager.Convert(hitResults[0].pose);
                 var anchor = _arAnchorManager.AddAnchor(geospatialPose.Latitude, geospatialPose.Longitude, geospatialPose.Latitude, geospatialPose.EunRotation);
                 _debugController.AddDebugMessage("Anchor position: " + anchor.transform.position);
-                Instantiate(_reviewPlaceHolder, anchor.transform);
+                var review = Instantiate(_reviewPlaceHolder, anchor.transform.position, anchor.transform.rotation, anchor.transform);
             }
         }
     }
