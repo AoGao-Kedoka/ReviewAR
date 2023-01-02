@@ -1,14 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
 
 public class DebugController : MonoBehaviour
 {
     private bool active = true;
+    [Tooltip("Debugging objects that should be handled by this sript")]
     [SerializeField] private List<GameObject> _debugObjects;
     [SerializeField] private TMP_Text _debugText;
+    [SerializeField] private Button _switchScene;
 
+    private void Start()
+    {
+        _switchScene.onClick.AddListener(SwitchDemoScene);
+    }
     public void ToogleDebug()
     {
         foreach (GameObject g in _debugObjects)
@@ -36,5 +44,10 @@ public class DebugController : MonoBehaviour
     {
         _debugText.text += message;
         Debug.Log(message);
+    }
+
+    public void SwitchDemoScene()
+    {
+        SceneManager.LoadScene(1);
     }
 }
