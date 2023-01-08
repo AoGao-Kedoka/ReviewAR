@@ -7,7 +7,7 @@ public class FillInformation : MonoBehaviour
 {
     private GameObject MetadataPanel;
     private GameObject ReviewsPanel;
-
+    public Location PlaceLocation;//how to find distance
 
     /// <summary>
     /// Fills the info of panel with business details
@@ -16,76 +16,82 @@ public class FillInformation : MonoBehaviour
     {
         if (place.Name is not null)
         {
-            GameObject.Find("BusinessName").GetComponent<TextMeshProUGUI>().text = place.Name;
+            this.transform.Find("MetadataPanel/BusinessName").GetComponent<TextMeshProUGUI>().text = place.Name;
         }
         else
         {
-            GameObject.Find("BusinessName").SetActive(false);
+            this.transform.Find("MetadataPanel/BusinessName").gameObject.SetActive(false);
         }
 
         if (place.Rating.HasValue)
         {
-            GameObject.Find("ReviewsScore").GetComponent<TextMeshProUGUI>().text = place.Rating.Value.ToString();
-            GameObject.Find("ColorImageS").GetComponent<RectTransform>()
+            this.transform.Find("MetadataPanel/ReviewsSection/ReviewsScore").GetComponent<TextMeshProUGUI>().text = place.Rating.Value.ToString();
+            this.transform.Find("MetadataPanel/ReviewsSection/ReviewScoreImages/ColorImageS").GetComponent<RectTransform>()
                                           .sizeDelta
-                                          .Scale((new Vector3(1, place.Rating.Value / 5.0f)));
+                                          .Scale((new Vector3(place.Rating.Value / 5.0f, 1.0f, 1.0f)));
+
         }
         else
         {
-            GameObject.Find("ReviewsSection").SetActive(false);
+            this.transform.Find("MetadataPanel/ReviewsSection").gameObject.SetActive(false);
         }
 
         if (place.Price_level.HasValue)
         {
-            GameObject.Find("PricesScore").GetComponent<TextMeshProUGUI>().text = place.Price_level.Value.ToString();
-            GameObject.Find("ColorImageP").GetComponent<RectTransform>()
-                                          .sizeDelta.Scale((new Vector3(1, place.Price_level.Value / 4.0f)));
+            this.transform.Find("MetadataPanel/PriceSection/PricesScore").GetComponent<TextMeshProUGUI>().text = place.Price_level.Value.ToString();
+            this.transform.Find("MetadataPanel/PriceSection/PriceImages/ColorImageP").GetComponent<RectTransform>()
+                                          .sizeDelta.Scale((new Vector3(place.Price_level.Value / 4.0f, 1.0f, 1.0f)));
 
         }
         else
         {
-            GameObject.Find("PricesSection").SetActive(false);
+            this.transform.Find("MetadataPanel/PriceSection").gameObject.SetActive(false);
         }
 
         if (place.OpeningHours is not null)
         {
-            GameObject.Find("OpenStatus").GetComponent<TextMeshProUGUI>().text = (place.OpeningHours.Open_now == true ? "Open" : "Closed");
-            GameObject.Find("OpenStatus").GetComponent<TextMeshProUGUI>().color = (place.OpeningHours.Open_now == true ? Color.green : Color.red);
+            this.transform.Find("MetadataPanel/OpenStatus").GetComponent<TextMeshProUGUI>().text = (place.OpeningHours.Open_now == true ? "Open" : "Closed");
+            this.transform.Find("MetadataPanel/OpenStatus").GetComponent<TextMeshProUGUI>().color = (place.OpeningHours.Open_now == true ? Color.green : Color.red);
 
         }
         else
         {
-            GameObject.Find("OpenStatus").SetActive(false);
+            this.transform.Find("MetadataPanel/OpenStatus").gameObject.SetActive(false);
         }
 
-        if (place.Place_id is not null)
+        if (place.Place_id is not null && place.Name is not null)
         {
-            GameObject.Find("ExternalButton").GetComponent<MoreDetialsButton>().id = place.Place_id;
+            this.transform.Find("MetadataPanel/ExternalButton").GetComponent<MoreDetialsButton>().id = place.Place_id;
+            this.transform.Find("MetadataPanel/ExternalButton").GetComponent<MoreDetialsButton>().bname = place.Name;
         }
         else
         {
-            GameObject.Find("ExternalButton").SetActive(false);
+            this.transform.Find("MetadataPanel/ExternalButton").gameObject.SetActive(false);
         }
 
-        if (place.Reviews.Count > 0)
+        if (place.Reviews?.Count == 0)
         {
-            GameObject.Find("ReviewExpandButton").SetActive(false);
+            this.transform.Find("MetadataPanel/ReviewsSection/ReviewExpandButton").gameObject.SetActive(false);
         }
         else//TODO: finish the image logic
         {
-            int i = 0;
-            for (; i < place.Reviews.Count; ++i)
+            this.transform.Find("MetadataPanel/ReviewsSection/ReviewExpandButton").GetComponent<ExpandButton>().ButtonPressed();
+
+            int i = 1;
+            for (; i <= place.Reviews?.Count; ++i)
             {
-                GameObject.Find(string.Format("ReviewText{0}", i)).GetComponent<TextMeshProUGUI>().text = place.Reviews[i].Text;
-                GameObject.Find("ColorImage" + i).GetComponent<RectTransform>()
-                           .sizeDelta.Scale((new Vector3(1, place.Price_level.Value / 5.0f)));
+                this.transform.Find(string.Format("ReviewsPanel/Review{0}/ReviewText{0}", i)).GetComponent<TextMeshProUGUI>().text = place.Reviews[i].Text;
+                this.transform.Find(string.Format("ReviewsPanel/Review{0}/ColorImage{0}", i)).GetComponent<RectTransform>()
+                           .sizeDelta.Scale((new Vector3(place.Rating.Value / 5.0f, 1.0f, 1.0f)));
+
             }
-            for(; i < 3; ++i)
+            for (; i <= 3; ++i)
             {
-                GameObject.Find(string.Format("ReviewText{0}", i)).SetActive(false);
-                GameObject.Find(string.Format("ReviewImage{0}", i)).SetActive(false);
+                this.transform.Find(string.Format("ReviewsPanel/Review{0}", i)).gameObject.SetActive(false);
+               //GameObject.Find(string.Format("ReviewImage{0}", i)).SetActive(false);
             }
 
         }
+        this.PlaceLocation = place.Geometry.Location;
     }
 }

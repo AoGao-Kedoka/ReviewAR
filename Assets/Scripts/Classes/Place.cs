@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 #nullable enable
+[System.Serializable]
 public class Place
 {
     /// <summary>

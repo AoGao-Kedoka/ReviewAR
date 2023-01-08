@@ -42,7 +42,6 @@ public class BusinessData : MonoBehaviour
         using HttpResponseMessage response = await BusinessData.httpClient.GetAsync(String.Format
             ("https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={0}%2C{1}&radius={2}&key={3}"
             , latitude, longitude, radius, apiKey)).ConfigureAwait(false);
-
         response.EnsureSuccessStatusCode();
         var result_text = await response.Content.ReadAsStringAsync();
         return JsonConvert.DeserializeObject<PlacesApiQueryResponse>(result_text);
@@ -52,7 +51,10 @@ public class BusinessData : MonoBehaviour
     [ContextMenu("Test")]
     public  void Call()
     {
-        PlacesApiQueryResponse reviews = GetPlaces(10f, 11f, 10000).Result;
+        PlacesApiQueryResponse reviews = GetPlaces(48.1098956f, 11.4768243f, 1000).Result;
+
+        FindObjectsOfType<UIController>()[0].DespawnPlaces(40, new Vector2(10, 11));
+        FindObjectsOfType<UIController>()[0].SpawnPlaces(reviews);
         Debug.Log(httpClient);
         Debug.Log(reviews);
     }

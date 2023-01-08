@@ -75,6 +75,16 @@ public class ARController : MonoBehaviour
     /// </summary>
     private PlacesApiQueryResponse _places = null;
 
+    //DEBUG ONLY
+    public List<Place> pl2 = null;
+    public GameObject DebuggerPrefab;
+
+    /// <summary>
+    /// indicate when async task has returned results, set it back to false when finished
+    /// </summary>
+    private bool _task_finished = false;
+    Task<PlacesApiQueryResponse> placesTask = null;
+
     private void Awake()
     {
         // Lock app orientation
@@ -114,21 +124,56 @@ public class ARController : MonoBehaviour
 
     private void Update()
     {
+        var v = new Vector3(1f, 1f, 1f);
+
+        v.Scale(new Vector3(1, 3 / 5.0f, 0));
+        Debug.Log(v);
         LifecycleUpdate();
         bool enabled = EnableGeospatial();
         if (!enabled) return;
 
-        // fetch business data
-        // var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
-        // if (TrackingState.Tracking == _arEarthManager.EarthTrackingState &&
-        //     ((_lastSavedPosition == Vector2.zero) || Vector2.Distance(currentPose, _lastSavedPosition) > 20.0f))
-        // {
-        //     var placesTask = BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius);
-        //     _lastSavedPosition = currentPose;
-        //     _places = placesTask.Result;
-        // }
-        // var message = (_places == null || _places.Places == null) ? "No places got from API" : _places.Places[0].Name;
-        // _debugController.AddDebugMessage(message);
+        //fetch business data
+        //TODO: DISTANCE
+        var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
+        try
+        {
+
+            if (TrackingState.Tracking == _arEarthManager.EarthTrackingState &&
+            ((_lastSavedPosition == Vector2.zero) || Vector2.Distance(currentPose, _lastSavedPosition) > 20.0f))
+            {
+                var obj = Instantiate(this.DebuggerPrefab);
+                obj.name = "TaskStarted";
+                if(placesTask != null) { placesTask.Dispose(); placesTask = null; }
+                placesTask = Task.Run(()=>BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius));
+          
+
+                _lastSavedPosition = currentPose;
+
+            }
+
+            if (placesTask != null && placesTask.IsCompleted)
+            {
+                var obj = Instantiate(this.DebuggerPrefab);
+                obj.name = "TaskCompleted";
+
+                _places = placesTask.Result;
+                this._task_finished = true;
+                pl2 = _places.Places;
+
+                FindObjectsOfType<UIController>()[0].DespawnPlaces(_searchRadius, currentPose);
+                FindObjectsOfType<UIController>()[0].SpawnPlaces(_places);
+                placesTask = null;
+            }
+
+        }
+        catch(Exception ex)
+        {
+
+            var obj = Instantiate(this.DebuggerPrefab);
+            obj.name =  "exception" + ex.Message;
+
+
+        }
 
         // AR overlay
         if (Input.touchCount > 0)

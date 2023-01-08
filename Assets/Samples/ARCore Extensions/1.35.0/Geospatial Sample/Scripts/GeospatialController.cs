@@ -766,6 +766,13 @@ namespace Google.XR.ARCoreExtensions.Samples.Geospatial
                     "Failed to get camera permission. VPS availability check is not available.");
                 yield break;
             }
+
+            if (!Permission.HasUserAuthorizedPermission("android.permission.INTERNET"))
+            {
+                Debug.Log("Requesting INTERNET permission.");
+                Permission.RequestUserPermission("android.permission.INTERNET");
+                yield return new WaitForSeconds(3.0f);
+            }
 #endif
 
             while (_waitingForLocationService)

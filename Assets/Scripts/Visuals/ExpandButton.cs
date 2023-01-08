@@ -7,7 +7,9 @@ public class ExpandButton : MonoBehaviour
 {
     enum Status { Collapsed, Expanded};
     private Status PanelStatus = Status.Collapsed;
+    [SerializeField]
     private RectTransform ReviewsPanel;
+    [SerializeField]
     private TextMeshProUGUI TextComponent;
     public void ButtonPressed()
     {
@@ -29,9 +31,8 @@ public class ExpandButton : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        this.ReviewsPanel = (RectTransform)GameObject.Find("ReviewsPanel").transform;
         this.ReviewsPanel.gameObject.SetActive(false);  
-        this.TextComponent = this.GetComponentInChildren<TextMeshProUGUI>();
+      //  this.TextComponent = this.GetComponentInChildren<TextMeshProUGUI>();
     }
 
     // Update is called once per frame

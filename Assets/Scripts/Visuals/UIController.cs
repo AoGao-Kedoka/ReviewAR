@@ -8,6 +8,7 @@ public class UIController : MonoBehaviour
 {
     [SerializeField] private Image _localizingImage;
     [SerializeField] GameObject InformationCanvas;
+    private List<GameObject> SpawnedPanels = new List<GameObject>();
     /// <summary>
     /// Enable localizing icon in the center of screen
     /// </summary>
@@ -39,6 +40,23 @@ public class UIController : MonoBehaviour
             var obj = Instantiate(this.InformationCanvas);
             obj.transform.position = place.position;
             obj.GetComponent<FillInformation>().FillInfo(place);
+            SpawnedPanels.Add(obj);
+        }
+    }
+
+    public void DespawnPlaces(float radius, Vector2 currentLocation)
+    {
+
+        foreach (GameObject canvas in this.SpawnedPanels)
+        {
+            if (Location.FindDistance(canvas.GetComponent<FillInformation>().PlaceLocation.Lat,
+                                      canvas.GetComponent<FillInformation>().PlaceLocation.Lng,
+                                      currentLocation.x,
+                                      currentLocation.y
+                                      ) > radius){ 
+                this.SpawnedPanels.Remove(canvas);
+                Destroy(canvas.gameObject);
+            }
         }
     }
 
