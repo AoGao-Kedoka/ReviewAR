@@ -50,8 +50,8 @@ public class UIController : MonoBehaviour
         foreach (GameObject canvas in this.SpawnedPanels)
         {
             if (Location.FindDistance(canvas.GetComponent<FillInformation>().PlaceLocation.Lat,
-                                      canvas.GetComponent<FillInformation>().PlaceLocation.Lng,
                                       currentLocation.x,
+                                      canvas.GetComponent<FillInformation>().PlaceLocation.Lng,
                                       currentLocation.y
                                       ) > radius){ 
                 this.SpawnedPanels.Remove(canvas);

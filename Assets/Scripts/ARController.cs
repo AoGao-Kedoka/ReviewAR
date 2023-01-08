@@ -124,16 +124,11 @@ public class ARController : MonoBehaviour
 
     private void Update()
     {
-        var v = new Vector3(1f, 1f, 1f);
-
-        v.Scale(new Vector3(1, 3 / 5.0f, 0));
-        Debug.Log(v);
         LifecycleUpdate();
         bool enabled = EnableGeospatial();
         if (!enabled) return;
 
         //fetch business data
-        //TODO: DISTANCE
         var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
         try
         {
@@ -143,6 +138,7 @@ public class ARController : MonoBehaviour
             {
                 var obj = Instantiate(this.DebuggerPrefab);
                 obj.name = "TaskStarted";
+
                 if(placesTask != null) { placesTask.Dispose(); placesTask = null; }
                 placesTask = Task.Run(()=>BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius));
           
