@@ -9,6 +9,7 @@ public class UIController : MonoBehaviour
     [SerializeField] private Image _localizingImage;
     [SerializeField] GameObject InformationCanvas;
     private List<GameObject> SpawnedPanels = new List<GameObject>();
+
     /// <summary>
     /// Enable localizing icon in the center of screen
     /// </summary>

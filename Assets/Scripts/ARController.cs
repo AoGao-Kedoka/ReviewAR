@@ -71,6 +71,11 @@ public class ARController : MonoBehaviour
     private Vector2 _lastSavedPosition = Vector2.zero;
 
     /// <summary>
+    /// counter for business data call
+    /// </summary>
+    private int _businessDataCallCounter = 0;
+
+    /// <summary>
     /// places got from the api requests
     /// </summary>
     private PlacesApiQueryResponse _places = null;
@@ -88,10 +93,10 @@ public class ARController : MonoBehaviour
     private void Awake()
     {
         // Lock app orientation
-        Screen.autorotateToLandscapeLeft = false;
-        Screen.autorotateToLandscapeRight = false;
-        Screen.autorotateToPortraitUpsideDown = false;
-        Screen.orientation = ScreenOrientation.Portrait;
+        // Screen.autorotateToLandscapeLeft = false;
+        // Screen.autorotateToLandscapeRight = false;
+        // Screen.autorotateToPortraitUpsideDown = false;
+        // Screen.orientation = ScreenOrientation.Portrait;
 
 
         // Check AR game objects
@@ -126,6 +131,11 @@ public class ARController : MonoBehaviour
     {
         LifecycleUpdate();
         bool enabled = EnableGeospatial();
+        if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
+        {
+            enabled = true;
+        }
+
         if (!enabled) return;
 
         //fetch business data
@@ -133,18 +143,16 @@ public class ARController : MonoBehaviour
         try
         {
 
-            if (TrackingState.Tracking == _arEarthManager.EarthTrackingState &&
-            ((_lastSavedPosition == Vector2.zero) || Vector2.Distance(currentPose, _lastSavedPosition) > 20.0f))
+            if (TrackingState.Tracking == _arEarthManager.EarthTrackingState && _businessDataCallCounter == 0 &&
+                ((_lastSavedPosition == Vector2.zero) || Location.FindDistance(currentPose.x, _lastSavedPosition.x, currentPose.y, _lastSavedPosition.y) < 20))
             {
                 var obj = Instantiate(this.DebuggerPrefab);
                 obj.name = "TaskStarted";
 
                 if(placesTask != null) { placesTask.Dispose(); placesTask = null; }
-                placesTask = Task.Run(()=>BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius));
-          
-
+                _businessDataCallCounter++;
+                placesTask = Task.Run(() => BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius));
                 _lastSavedPosition = currentPose;
-
             }
 
             if (placesTask != null && placesTask.IsCompleted)
@@ -172,18 +180,10 @@ public class ARController : MonoBehaviour
         }
 
         // AR overlay
-        if (Input.touchCount > 0)
+        if (_places != null)
         {
-            var position = Input.GetTouch(0).position;
-            List<ARRaycastHit> hitResults = new List<ARRaycastHit>();
-            _arRaycastManager.Raycast(position, hitResults, TrackableType.Planes | TrackableType.FeaturePoint);
-            if (hitResults.Count > 0)
+            foreach (var place in _places.Places)
             {
-                _debugController.AddDebugMessage("Hit position: " + hitResults[0].pose);
-                GeospatialPose geospatialPose = _arEarthManager.Convert(hitResults[0].pose);
-                var anchor = _arAnchorManager.AddAnchor(geospatialPose.Latitude, geospatialPose.Longitude, geospatialPose.Latitude, geospatialPose.EunRotation);
-                _debugController.AddDebugMessage("Anchor position: " + anchor.transform.position);
-                var review = Instantiate(_reviewPlaceHolder, anchor.transform.position, anchor.transform.rotation, anchor.transform);
             }
         }
     }
