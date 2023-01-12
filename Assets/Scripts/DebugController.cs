@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using UnityEngine.XR.ARFoundation;
 
 public class DebugController : MonoBehaviour
 {
@@ -48,6 +49,8 @@ public class DebugController : MonoBehaviour
 
     public void SwitchDemoScene()
     {
-        SceneManager.LoadScene(1);
+        LoaderUtility.Deinitialize();
+        SceneManager.LoadScene(1, LoadSceneMode.Single);
+        LoaderUtility.Initialize();
     }
 }

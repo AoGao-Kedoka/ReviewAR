@@ -139,7 +139,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &84888083
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -875,7 +875,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1159036410
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1174,18 +1174,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f1e5b6fd7060d047b22afe3159cedbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _arOrigin: {fileID: 1159036410}
-  _arSession: {fileID: 2019932573}
-  _arExtensions: {fileID: 84888083}
-  _arAnchorManager: {fileID: 1159036414}
-  _arRaycastManager: {fileID: 1159036415}
   _arEarthManager: {fileID: 1159036413}
-  _searchRadius: 40
-  _debugController: {fileID: 222144614}
+  _arCoreExtension: {fileID: 84888083}
   _uiController: {fileID: 1969541384}
-  _reviewPlaceHolder: {fileID: 5410552834085059023, guid: 61ca1ac5457d79e468b7eb3e0a749000, type: 3}
-  pl2: []
-  DebuggerPrefab: {fileID: 8724212524485118506, guid: efd911c068748f64bb5575c39cb3bb82, type: 3}
+  _debugController: {fileID: 222144614}
+  _lockScreenToPortrait: 1
+  _searchRadius: 100
+  _debuggerPrefab: {fileID: 8724212524485118506, guid: efd911c068748f64bb5575c39cb3bb82, type: 3}
 --- !u!1 &1658342287
 GameObject:
   m_ObjectHideFlags: 0
@@ -2175,7 +2170,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &2019932572
 MonoBehaviour:
   m_ObjectHideFlags: 0

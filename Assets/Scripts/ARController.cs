@@ -1,247 +1,256 @@
-using Google.XR.ARCoreExtensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Google.XR.ARCoreExtensions;
 using UnityEngine;
+using UnityEngine.Android;
+using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
-using UnityEngine.Android;
-
 /// <summary>
-/// THIS IS THE MAIN SCRIPT OF THE PROJECT!
+/// Controller for Geospatial sample.
 /// </summary>
 public class ARController : MonoBehaviour
 {
-    [Header("AR Properties")]
-    [SerializeField] private ARSessionOrigin _arOrigin;
-    [SerializeField] private ARSession _arSession;
-    [SerializeField] private ARCoreExtensions _arExtensions;
+    [Header("AR Components")]
 
     /// <summary>
-    /// AR Anchor Manager from ARFoundation Extension
+    /// The AREarthManager used .
     /// </summary>
-    [Header("Geospatial Properties")]
-    [SerializeField] private ARAnchorManager _arAnchorManager;
+    [SerializeField] AREarthManager _arEarthManager;
 
     /// <summary>
-    /// AR Raycast Manager from ARFoundation
+    /// The ARCoreExtensions used .
     /// </summary>
-    [SerializeField] private ARRaycastManager _arRaycastManager;
+    [SerializeField] ARCoreExtensions _arCoreExtension;
 
     /// <summary>
-    /// AR Earth Manager from ARFoundation Extension
+    /// AR anchor
     /// </summary>
-    [SerializeField] private AREarthManager _arEarthManager;
+    [SerializeField] ARAnchorManager _arAnchorManager;
 
-    /// <summary>
-    /// radius for business search 
-    /// </summary>
-    [Header("Parameters")]
-    [SerializeField] private float _searchRadius;
-
-    /// <summary>
-    /// Debug controller for logging, calling `_debugController.UpdateDebugMessage()` will
-    /// update debug message on panel and log into logcat 
-    /// </summary>
-    [Header("Debug")]
-    [SerializeField] private DebugController _debugController;
-
-    /// <summary>
-    /// UI controller for controlling all the UI
-    /// </summary>
+    [Header("UI")]
     [SerializeField] private UIController _uiController;
 
-    [SerializeField] private GameObject _reviewPlaceHolder;
-
-    /// <summary>
-    /// orientation yaw accuracy threshold for checking whether camera helps with the localization
+    #region Google Maps
+    // <summary>
+    /// indicate when async task has returned results, set it back to false when finished
     /// </summary>
-    private const double _orientationYawAccuracyThreshold = 25;
+    private bool _task_finished = false;
 
-    /// <summary>
-    /// horizontal accuracy threshold for checking whether camera helps with the localization
-    /// </summary>
-    private const double _horizontalAccuracyThreshold = 20;
-
-    /// <summary>
-    /// last saved latitude and longtitudevalue
-    /// </summary>
-    private Vector2 _lastSavedPosition = Vector2.zero;
-
-    /// <summary>
-    /// counter for business data call
-    /// </summary>
-    private int _businessDataCallCounter = 0;
-
+    Task<PlacesApiQueryResponse> placesTask = null;
     /// <summary>
     /// places got from the api requests
     /// </summary>
     private PlacesApiQueryResponse _places = null;
+    #endregion
 
-    //DEBUG ONLY
-    public List<Place> pl2 = null;
-    public GameObject DebuggerPrefab;
+    [Header("Debugger")]
+    [SerializeField] private DebugController _debugController;
+    [SerializeField] private bool _lockScreenToPortrait = true;
+    [SerializeField] private float _searchRadius;
+    [SerializeField] private GameObject _debuggerPrefab;
+
+
+    private bool _isReturning = false;
+    private bool _enablingGeospatial = false;
+    private float _configurePrepareTime = 3f;
+
+    bool _isReady = false;
+    public bool IsReady { get { return _isReady; } }
+
+
+    private IEnumerator _startLocationService = null;
 
     /// <summary>
-    /// indicate when async task has returned results, set it back to false when finished
+    /// Accuracy threshold for orientation yaw accuracy in degrees that can be treated as
+    /// localization completed.
     /// </summary>
-    private bool _task_finished = false;
-    Task<PlacesApiQueryResponse> placesTask = null;
+    private const double _orientationYawAccuracyThreshold = 25;
 
-    private void Awake()
+    /// <summary>
+    /// Accuracy threshold for heading degree that can be treated as localization completed.
+    /// </summary>
+    private const double _headingAccuracyThreshold = 25;
+
+    /// <summary>
+    /// Accuracy threshold for altitude and longitude that can be treated as localization
+    /// completed.
+    /// </summary>
+    private const double _horizontalAccuracyThreshold = 20;
+
+    /// <summary>
+    /// last saved pose
+    /// </summary>
+    private Vector2 _lastSavedPosition = Vector2.zero;
+
+    /// <summary>
+    /// request counter
+    /// </summary>
+    private int _requestCounter = 0;
+
+    /// <summary>
+    /// anchor instantiated for the current places list
+    /// </summary>
+    private bool _anchorInstantiated = false;
+
+    public void Awake()
     {
-        // Lock app orientation
-        // Screen.autorotateToLandscapeLeft = false;
-        // Screen.autorotateToLandscapeRight = false;
-        // Screen.autorotateToPortraitUpsideDown = false;
-        // Screen.orientation = ScreenOrientation.Portrait;
-
-
-        // Check AR game objects
-        if (_arOrigin == null)
+        if (_lockScreenToPortrait)
         {
-            Debug.LogError("Cannot find ARSessionOrigin.");
+            // Lock screen to portrait.
+            Screen.autorotateToLandscapeLeft = false;
+            Screen.autorotateToLandscapeRight = false;
+            Screen.autorotateToPortraitUpsideDown = false;
+            Screen.orientation = ScreenOrientation.Portrait;
         }
 
-        if (_arSession == null)
-        {
-            Debug.LogError("Cannot find ARSession.");
-        }
+        Application.targetFrameRate = 60;
 
-        if (_arExtensions == null)
+        if (_arCoreExtension == null)
         {
             Debug.LogError("Cannot find ARCoreExtensions.");
         }
-
-        _debugController.UpdateDebugMessage("Awake finished");
     }
-
-    private void OnEnable()
-    {
-        _arOrigin.gameObject.SetActive(true);
-        _arSession.gameObject.SetActive(true);
-        _arExtensions.gameObject.SetActive(true);
-
-        StartCoroutine(StartLocationService());
-    }
-
-    private void Update()
-    {
-        LifecycleUpdate();
-        bool enabled = EnableGeospatial();
-        if (TrackingState.Tracking == _arEarthManager.EarthTrackingState)
-        {
-            enabled = true;
-        }
-
-        if (!enabled) return;
-
-        //fetch business data
-        var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
-        try
-        {
-
-            if (TrackingState.Tracking == _arEarthManager.EarthTrackingState && _businessDataCallCounter == 0 &&
-                ((_lastSavedPosition == Vector2.zero) || Location.FindDistance(currentPose.x, _lastSavedPosition.x, currentPose.y, _lastSavedPosition.y) < 20))
-            {
-                var obj = Instantiate(this.DebuggerPrefab);
-                obj.name = "TaskStarted";
-
-                if(placesTask != null) { placesTask.Dispose(); placesTask = null; }
-                _businessDataCallCounter++;
-                placesTask = Task.Run(() => BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius));
-                _lastSavedPosition = currentPose;
-            }
-
-            if (placesTask != null && placesTask.IsCompleted)
-            {
-                var obj = Instantiate(this.DebuggerPrefab);
-                obj.name = "TaskCompleted";
-
-                _places = placesTask.Result;
-                this._task_finished = true;
-                pl2 = _places.Places;
-
-                FindObjectsOfType<UIController>()[0].DespawnPlaces(_searchRadius, currentPose);
-                FindObjectsOfType<UIController>()[0].SpawnPlaces(_places);
-                placesTask = null;
-            }
-
-        }
-        catch(Exception ex)
-        {
-
-            var obj = Instantiate(this.DebuggerPrefab);
-            obj.name =  "exception" + ex.Message;
-
-
-        }
-
-        // AR overlay
-        if (_places != null)
-        {
-            foreach (var place in _places.Places)
-            {
-            }
-        }
-    }
-
 
     /// <summary>
-    /// Enable all the Geospatial functionality for our app
+    /// Unity's OnEnable() method.
     /// </summary>
-    /// <returns>True when sucess</returns>
-    private bool EnableGeospatial()
+    public void OnEnable()
     {
-        // Enable Geospatial mode
+        _isReturning = false;
+        _enablingGeospatial = false;
+        _isReady = false;
+        _startLocationService = StartLocationService();
+        StartCoroutine(_startLocationService);
+    }
+    private bool _waitingForLocationService = false;
+    private IEnumerator StartLocationService()
+    {
+        _waitingForLocationService = true;
+#if UNITY_ANDROID
+        if (!Permission.HasUserAuthorizedPermission(Permission.FineLocation))
+        {
+            Debug.Log("Requesting fine location permission.");
+            Permission.RequestUserPermission(Permission.FineLocation);
+            yield return new WaitForSeconds(3.0f);
+        }
+#endif
+
+        if (!Input.location.isEnabledByUser)
+        {
+            Debug.Log("Location service is disabled by User.");
+            _waitingForLocationService = false;
+            yield break;
+        }
+
+        Debug.Log("Start location service.");
+        Input.location.Start();
+
+        while (Input.location.status == LocationServiceStatus.Initializing)
+        {
+            yield return null;
+        }
+
+        _waitingForLocationService = false;
+        if (Input.location.status != LocationServiceStatus.Running)
+        {
+            Debug.LogWarningFormat(
+                "Location service ends with {0} status.", Input.location.status);
+            Input.location.Stop();
+        }
+    }
+    /// <summary>
+    /// Unity's OnDisable() method.
+    /// </summary>
+    public void OnDisable()
+    {
+        StopCoroutine(_startLocationService);
+        _startLocationService = null;
+        Debug.Log("Stop location services.");
+        Input.location.Stop();
+    }
+
+    /// <summary>
+    /// Unity's Update() method.
+    /// </summary>
+    public void Update()
+    {
+        // Check session error status.
+        LifecycleUpdate();
+        if (_isReturning)
+        {
+            return;
+        }
+
+        if (ARSession.state != ARSessionState.SessionInitializing &&
+            ARSession.state != ARSessionState.SessionTracking)
+        {
+            return;
+        }
+
+        // Check feature support and enable Geospatial API when it's supported.
         var featureSupport = _arEarthManager.IsGeospatialModeSupported(GeospatialMode.Enabled);
         switch (featureSupport)
         {
             case FeatureSupported.Unknown:
-                _debugController.UpdateDebugMessage("FeatureSupport unknown");
-                return false;
+                return;
             case FeatureSupported.Unsupported:
-                _debugController.UpdateDebugMessage("FeatureSupport unsupported");
-                return false;
+                ReturnWithReason("Geospatial API is not supported by this devices.");
+                return;
             case FeatureSupported.Supported:
-                _debugController.UpdateDebugMessage("FeatureSupport supported");
-                if (_arExtensions.ARCoreExtensionsConfig.GeospatialMode ==
+                if (_arCoreExtension.ARCoreExtensionsConfig.GeospatialMode ==
                     GeospatialMode.Disabled)
                 {
-                    _debugController.UpdateDebugMessage("Geospatial sample switched to GeospatialMode.Enabled.");
-                    _arExtensions.ARCoreExtensionsConfig.GeospatialMode =
+                    Debug.Log("Geospatial switched to GeospatialMode.Enabled.");
+                    _arCoreExtension.ARCoreExtensionsConfig.GeospatialMode =
                         GeospatialMode.Enabled;
-                    return false;
+                    _configurePrepareTime = 3.0f;
+                    _enablingGeospatial = true;
+                    return;
                 }
+
                 break;
         }
 
-        StartCoroutine(Waiter(3));
-
-        // Enable earth state
-        var earchState = _arEarthManager.EarthState;
-        if (earchState == EarthState.ErrorEarthNotReady)
+        // Waiting for new configuration taking effect.
+        if (_enablingGeospatial)
         {
-            _debugController.UpdateDebugMessage("Earth not ready");
-            return false;
-        }
-        else if (earchState != EarthState.Enabled)
-        {
-            _debugController.UpdateDebugMessage("Geospatial sample encountered an EarthState error: " + earchState);
-            return false;
-        }
-        else
-        {
-            _debugController.UpdateDebugMessage("EarchState: " + earchState);
+            _configurePrepareTime -= Time.deltaTime;
+            if (_configurePrepareTime < 0)
+            {
+                _enablingGeospatial = false;
+            }
+            else
+            {
+                return;
+            }
         }
 
-        // Check earth localization
-        bool isSessionReady = ARSession.state == ARSessionState.SessionTracking && Input.location.status == LocationServiceStatus.Running;
-        var earthTrackingState = _arEarthManager.EarthTrackingState;
-        var pose = earthTrackingState == TrackingState.Tracking ? _arEarthManager.CameraGeospatialPose : new GeospatialPose();
-        string location_message = "";
+        // Check earth state.
+        var earthState = _arEarthManager.EarthState;
+        if (earthState == EarthState.ErrorEarthNotReady)
+        {
+            _debugController.UpdateDebugMessage("Initializing Geospatial functionalities.");
+            return;
+        }
+        else if (earthState != EarthState.Enabled)
+        {
+            _debugController.UpdateDebugMessage("Geospatial sample encountered an EarthState error: " + earthState);
+            return;
+        }
+
+        // Check earth localization.
+        bool isSessionReady = ARSession.state == ARSessionState.SessionTracking &&
+            Input.location.status == LocationServiceStatus.Running;
+        //If the process can reach this line and isSessionReady is true, the GeospatialAPI is available
+        _isReady = isSessionReady;
+
+        var location_message = "";
+        var pose = _arEarthManager.CameraGeospatialPose;
         if (_arEarthManager.EarthTrackingState == TrackingState.Tracking)
         {
             location_message = string.Format(
@@ -258,26 +267,100 @@ public class ARController : MonoBehaviour
                 pose.VerticalAccuracy.ToString(),
                 pose.EunRotation.ToString(),
                 pose.OrientationYawAccuracy.ToString());
+            FetchBussinessData();
         }
-        if (!isSessionReady || earthTrackingState != TrackingState.Tracking ||
-            pose.OrientationYawAccuracy > _orientationYawAccuracyThreshold ||
-            pose.HorizontalAccuracy > _horizontalAccuracyThreshold)
+        #region DEBUG
+        var places_message = "";
+        if (_places != null)
+        {
+            foreach (var place in _places.Places)
+            {
+                places_message += place.Name + "\t";
+            }
+        }
+        #endregion
+        if (!isSessionReady || _arEarthManager.EarthTrackingState != TrackingState.Tracking ||
+            _arEarthManager.CameraGeospatialPose.OrientationYawAccuracy > _orientationYawAccuracyThreshold ||
+            _arEarthManager.CameraGeospatialPose.HorizontalAccuracy > _horizontalAccuracyThreshold)
         {
             _uiController.EnableLocalizationImage();
-            _debugController.UpdateDebugMessage("Point camera at buildings, stores and signs near you\n" + location_message);
-            return false;
+            _debugController.UpdateDebugMessage("Rotate around for buildings...\n" + location_message + places_message);
+            return;
         }
-
         _uiController.DisableLocalizationImage();
-        _debugController.UpdateDebugMessage("Successfully Located\n" + location_message);
-        return true;
+        _debugController.UpdateDebugMessage("Success\n" + location_message + places_message);
+
+        // set anchor
+        if (_places != null && !_anchorInstantiated)
+        {
+            foreach (var place in _places.Places)
+            {
+                var anchor = _arAnchorManager.AddAnchor(place.Geometry.Location.Lat, place.Geometry.Location.Lng, _arEarthManager.CameraGeospatialPose.Altitude, Quaternion.identity);
+                Instantiate(_debuggerPrefab, anchor.transform);
+            }
+
+            #region DEBUG
+            var anchorIdent= _arAnchorManager.AddAnchor(_arEarthManager.CameraGeospatialPose.Latitude, _arEarthManager.CameraGeospatialPose.Longitude, _arEarthManager.CameraGeospatialPose.Altitude, _arEarthManager.CameraGeospatialPose.EunRotation);
+            #endregion
+            Instantiate(_debuggerPrefab, anchorIdent.transform);
+
+            _anchorInstantiated = true;
+        }
     }
+
+    private void FetchBussinessData()
+    {
+        //fetch business data
+        var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
+        try
+        {
+
+            if (TrackingState.Tracking == _arEarthManager.EarthTrackingState && _requestCounter == 0 &&
+                ((_lastSavedPosition == Vector2.zero) || Location.FindDistance(currentPose.x, _lastSavedPosition.x, currentPose.y, _lastSavedPosition.y) < (_searchRadius / 2)))
+            {
+                var obj = Instantiate(_debuggerPrefab);
+                obj.name = "TaskStarted";
+
+                if (placesTask != null) { placesTask.Dispose(); placesTask = null; }
+                _requestCounter++;
+                placesTask = Task.Run(() => BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius));
+                _lastSavedPosition = currentPose;
+            }
+
+            if (placesTask != null && placesTask.IsCompleted)
+            {
+                var obj = Instantiate(this._debuggerPrefab);
+                obj.name = "TaskCompleted";
+
+                _places = placesTask.Result;
+                _anchorInstantiated = false;
+                this._task_finished = true;
+
+                FindObjectsOfType<UIController>()[0].DespawnPlaces(_searchRadius, currentPose);
+                FindObjectsOfType<UIController>()[0].SpawnPlaces(_places);
+                placesTask = null;
+            }
+
+        }
+        catch (Exception ex)
+        {
+
+            var obj = Instantiate(this._debuggerPrefab);
+            obj.name = "exception" + ex.Message;
+        }
+    }
+
     private void LifecycleUpdate()
     {
         // Pressing 'back' button quits the app.
         if (Input.GetKeyUp(KeyCode.Escape))
         {
             Application.Quit();
+        }
+
+        if (_isReturning)
+        {
+            return;
         }
 
         // Only allow the screen to sleep when not tracking.
@@ -296,56 +379,40 @@ public class ARController : MonoBehaviour
             ARSession.state != ARSessionState.SessionInitializing &&
             ARSession.state != ARSessionState.SessionTracking)
         {
-            _debugController.UpdateDebugMessage(
-                    "Geospatial sample encountered an ARSession error state {0}.\n" +
-                    "Please start the app again.");
+            returningReason = string.Format(
+                "Geospatial sample encountered an ARSession error state {0}.\n" +
+                "Please start the app again.",
+                ARSession.state);
         }
         else if (Input.location.status == LocationServiceStatus.Failed)
         {
-            _debugController.UpdateDebugMessage(
+            returningReason =
                 "Geospatial sample failed to start location service.\n" +
-                "Please start the app again and grant precise location permission.");
+                "Please start the app again and grant precise location permission.";
         }
-        else if (_arSession == null || _arOrigin == null || _arExtensions == null)
+        else if (_arCoreExtension == null)
         {
-            _debugController.UpdateDebugMessage(
-                 "Geospatial sample failed with missing AR Components.");
+            returningReason = string.Format(
+                "Geospatial sample failed with missing AR Components.");
         }
+
+        ReturnWithReason(returningReason);
     }
 
-
-    private IEnumerator StartLocationService()
+    private void ReturnWithReason(string reason)
     {
-        if (!Permission.HasUserAuthorizedPermission(Permission.FineLocation))
+        if (string.IsNullOrEmpty(reason))
         {
-            _debugController.AddDebugMessage("Requesting fine location permission.");
-            Permission.RequestUserPermission(Permission.FineLocation);
-            yield return new WaitForSeconds(3.0f);
+            return;
         }
 
-        if (!Input.location.isEnabledByUser)
-        {
-            _debugController.AddDebugMessage("Location service is disabled by User.");
-            yield break;
-        }
-
-        _debugController.AddDebugMessage("Start location service.");
-        Input.location.Start();
-
-        while (Input.location.status == LocationServiceStatus.Initializing)
-        {
-            yield return null;
-        }
-
-        if (Input.location.status != LocationServiceStatus.Running)
-        {
-            var message = string.Format("Location service ends with {0} status.", Input.location.status);
-            _debugController.AddDebugMessage(message);
-            Input.location.Stop();
-        }
+        _debugController.UpdateDebugMessage(reason);
+        _isReturning = true;
+        _isReady = false;
     }
-    private IEnumerator Waiter(float time)
+
+    private void QuitApplication()
     {
-        yield return new WaitForSeconds(time);
+        Application.Quit();
     }
 }
