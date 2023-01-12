@@ -31,20 +31,18 @@ public class DebugController : MonoBehaviour
     /// clear panel and update debug message on the panel
     /// </summary>
     /// <param name="message"></param>
-    public void UpdateDebugMessage(string message)
+    public void UpdatePanelMessage(string message)
     {
         _debugText.text = message;
-        Debug.Log(message);
     }
 
     /// <summary>
     /// add debug message on the panel without clearing the panel messages
     /// </summary>
     /// <param name="message"></param>
-    public void AddDebugMessage(string message)
+    public void AddMessageToPanel(string message)
     {
         _debugText.text += message;
-        Debug.Log(message);
     }
 
     public void SwitchDemoScene()

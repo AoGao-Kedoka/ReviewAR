@@ -234,12 +234,12 @@ public class ARController : MonoBehaviour
         var earthState = _arEarthManager.EarthState;
         if (earthState == EarthState.ErrorEarthNotReady)
         {
-            _debugController.UpdateDebugMessage("Initializing Geospatial functionalities.");
+            Debug.Log("Initializing Geospatial functionalities.");
             return;
         }
         else if (earthState != EarthState.Enabled)
         {
-            _debugController.UpdateDebugMessage("Geospatial sample encountered an EarthState error: " + earthState);
+            Debug.Log("Geospatial sample encountered an EarthState error: " + earthState);
             return;
         }
 
@@ -248,6 +248,8 @@ public class ARController : MonoBehaviour
             Input.location.status == LocationServiceStatus.Running;
         //If the process can reach this line and isSessionReady is true, the GeospatialAPI is available
         _isReady = isSessionReady;
+
+        if (!_isReady) return;
 
         var location_message = "";
         var pose = _arEarthManager.CameraGeospatialPose;
@@ -284,28 +286,34 @@ public class ARController : MonoBehaviour
             _arEarthManager.CameraGeospatialPose.HorizontalAccuracy > _horizontalAccuracyThreshold)
         {
             _uiController.EnableLocalizationImage();
-            _debugController.UpdateDebugMessage("Rotate around for buildings...\n" + location_message + places_message);
+            _debugController.UpdatePanelMessage("Rotate around for buildings...\n" + location_message + places_message);
             return;
         }
         _uiController.DisableLocalizationImage();
-        _debugController.UpdateDebugMessage("Success\n" + location_message + places_message);
+        _debugController.UpdatePanelMessage("Success\n" + location_message + places_message);
 
         // set anchor
         if (_places != null && !_anchorInstantiated)
         {
-            foreach (var place in _places.Places)
-            {
-                var anchor = _arAnchorManager.AddAnchor(place.Geometry.Location.Lat, place.Geometry.Location.Lng, _arEarthManager.CameraGeospatialPose.Altitude, Quaternion.identity);
-                Instantiate(_debuggerPrefab, anchor.transform);
-            }
-
-            #region DEBUG
-            var anchorIdent= _arAnchorManager.AddAnchor(_arEarthManager.CameraGeospatialPose.Latitude, _arEarthManager.CameraGeospatialPose.Longitude, _arEarthManager.CameraGeospatialPose.Altitude, _arEarthManager.CameraGeospatialPose.EunRotation);
-            #endregion
-            Instantiate(_debuggerPrefab, anchorIdent.transform);
-
-            _anchorInstantiated = true;
+            DisplayAR();
         }
+    }
+
+    private void DisplayAR()
+    {
+        foreach (var place in _places.Places)
+        {
+            var anchor = _arAnchorManager.AddAnchor(place.Geometry.Location.Lat, place.Geometry.Location.Lng, _arEarthManager.CameraGeospatialPose.Altitude, Quaternion.identity);
+            Instantiate(_debuggerPrefab, anchor.transform);
+        }
+
+        #region DEBUG
+        var anchorIdent= _arAnchorManager.AddAnchor(_arEarthManager.CameraGeospatialPose.Latitude, _arEarthManager.CameraGeospatialPose.Longitude, _arEarthManager.CameraGeospatialPose.Altitude, _arEarthManager.CameraGeospatialPose.EunRotation);
+        #endregion
+        var g = Instantiate(_debuggerPrefab, anchorIdent.transform);
+
+        _anchorInstantiated = true;
+        Debug.Log("Location prefabs instantiated");
     }
 
     private void FetchBussinessData()
@@ -406,7 +414,7 @@ public class ARController : MonoBehaviour
             return;
         }
 
-        _debugController.UpdateDebugMessage(reason);
+        Debug.Log(reason);
         _isReturning = true;
         _isReady = false;
     }
