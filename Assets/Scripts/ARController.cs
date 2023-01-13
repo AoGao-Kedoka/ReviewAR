@@ -9,6 +9,7 @@ using UnityEngine.Android;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using TMPro;
 
 /// <summary>
 /// Controller for Geospatial sample.
@@ -53,6 +54,7 @@ public class ARController : MonoBehaviour
     [SerializeField] private bool _lockScreenToPortrait = true;
     [SerializeField] private float _searchRadius;
     [SerializeField] private GameObject _debuggerPrefab;
+    [SerializeField] private GameObject _arrow;
 
 
     private bool _isReturning = false;
@@ -95,7 +97,21 @@ public class ARController : MonoBehaviour
     /// <summary>
     /// anchor instantiated for the current places list
     /// </summary>
-    private bool _anchorInstantiated = false;
+    private bool _anchorAllInstantiated = false;
+
+    /// <summary>
+    /// anchors instantiator 
+    /// </summary>
+    struct TerrainAnchorInstantiator
+    {
+        public ARGeospatialAnchor _terrainAnchor;
+        public bool instantiated;
+        public void ToogleInstantiated(bool toogle)
+        {
+            instantiated = false;
+        }
+    }
+    private List<TerrainAnchorInstantiator> _anchorInstantiators = new List<TerrainAnchorInstantiator>();
 
     public void Awake()
     {
@@ -114,6 +130,7 @@ public class ARController : MonoBehaviour
         {
             Debug.LogError("Cannot find ARCoreExtensions.");
         }
+
     }
 
     /// <summary>
@@ -293,27 +310,43 @@ public class ARController : MonoBehaviour
         _debugController.UpdatePanelMessage("Success\n" + location_message + places_message);
 
         // set anchor
-        if (_places != null && !_anchorInstantiated)
+        if (_places != null && !_anchorAllInstantiated)
         {
             DisplayAR();
         }
+
+        #region DEBUG
+        if (_places != null)
+            _arrow.transform.LookAt(_anchorInstantiators[0]._terrainAnchor.transform);
+        #endregion
     }
 
     private void DisplayAR()
     {
-        foreach (var place in _places.Places)
+        int counter = 0;
+        foreach(var anchor in _anchorInstantiators)
         {
-            var anchor = _arAnchorManager.AddAnchor(place.Geometry.Location.Lat, place.Geometry.Location.Lng, _arEarthManager.CameraGeospatialPose.Altitude, Quaternion.identity);
-            Instantiate(_debuggerPrefab, anchor.transform);
+            switch(anchor._terrainAnchor.terrainAnchorState)
+            {
+                case TerrainAnchorState.Success:
+                    if (!anchor.instantiated)
+                    {
+                        Instantiate(_debuggerPrefab, anchor._terrainAnchor.transform);
+                        var text = _debuggerPrefab.GetComponent<TMP_Text>();
+                        text.text = anchor._terrainAnchor.name;
+                        anchor.ToogleInstantiated(false);
+                    }
+                    counter++;
+                    Debug.Log("Instantiated anchor for: " + anchor._terrainAnchor.name);
+                    break;
+                case TerrainAnchorState.TaskInProgress:
+                    break;
+                default:
+                    Debug.LogError(anchor._terrainAnchor.terrainAnchorState);
+                    break;
+            }
         }
-
-        #region DEBUG
-        var anchorIdent= _arAnchorManager.AddAnchor(_arEarthManager.CameraGeospatialPose.Latitude, _arEarthManager.CameraGeospatialPose.Longitude, _arEarthManager.CameraGeospatialPose.Altitude, _arEarthManager.CameraGeospatialPose.EunRotation);
-        #endregion
-        var g = Instantiate(_debuggerPrefab, anchorIdent.transform);
-
-        _anchorInstantiated = true;
-        Debug.Log("Location prefabs instantiated");
+        if (counter == _anchorInstantiators.Count) _anchorAllInstantiated = true;
     }
 
     private void FetchBussinessData()
@@ -326,8 +359,7 @@ public class ARController : MonoBehaviour
             if (TrackingState.Tracking == _arEarthManager.EarthTrackingState && _requestCounter == 0 &&
                 ((_lastSavedPosition == Vector2.zero) || Location.FindDistance(currentPose.x, _lastSavedPosition.x, currentPose.y, _lastSavedPosition.y) < (_searchRadius / 2)))
             {
-                var obj = Instantiate(_debuggerPrefab);
-                obj.name = "TaskStarted";
+                Debug.Log("TaskStarted");
 
                 if (placesTask != null) { placesTask.Dispose(); placesTask = null; }
                 _requestCounter++;
@@ -337,16 +369,35 @@ public class ARController : MonoBehaviour
 
             if (placesTask != null && placesTask.IsCompleted)
             {
-                var obj = Instantiate(this._debuggerPrefab);
-                obj.name = "TaskCompleted";
+                Debug.Log("TaskCompleted");
 
                 _places = placesTask.Result;
-                _anchorInstantiated = false;
+                _anchorAllInstantiated = false;
                 this._task_finished = true;
 
                 FindObjectsOfType<UIController>()[0].DespawnPlaces(_searchRadius, currentPose);
                 FindObjectsOfType<UIController>()[0].SpawnPlaces(_places);
                 placesTask = null;
+
+                // Create Terrain Anchors
+                foreach (var place in _places.Places)
+                {
+                    if (_arEarthManager.EarthState == EarthState.Enabled &&
+                        _arEarthManager.EarthTrackingState == TrackingState.Tracking)
+                    {
+                        TerrainAnchorInstantiator anchor;
+                        var terrainAnchor = _arAnchorManager.ResolveAnchorOnTerrain(
+                            place.Geometry.Location.Lat,
+                            place.Geometry.Location.Lng,
+                            0,
+                            Quaternion.identity
+                            );
+                        terrainAnchor.gameObject.name = place.Name;
+                        anchor.instantiated = false;
+                        anchor._terrainAnchor = terrainAnchor;
+                        _anchorInstantiators.Add(anchor);
+                    }
+                }
             }
 
         }
@@ -419,8 +470,14 @@ public class ARController : MonoBehaviour
         _isReady = false;
     }
 
-    private void QuitApplication()
+    public void InstantiatePoseAnchor()
     {
-        Application.Quit();
+        if (_arEarthManager.EarthTrackingState == TrackingState.Tracking)
+        {
+            var pose = _arEarthManager.CameraGeospatialPose;
+            var anchor = _arAnchorManager.AddAnchor(pose.Latitude, pose.Longitude, pose.Altitude, pose.EunRotation);
+            var anchorAsset = Instantiate(_debuggerPrefab, anchor.transform);
+            Debug.Log("DEBUG: Instantiated a debug anchor: " + anchorAsset.name);
+        }
     }
 }

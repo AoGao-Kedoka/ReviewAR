@@ -12,12 +12,7 @@ public class DebugController : MonoBehaviour
     [Tooltip("Debugging objects that should be handled by this sript")]
     [SerializeField] private List<GameObject> _debugObjects;
     [SerializeField] private TMP_Text _debugText;
-    [SerializeField] private Button _switchScene;
 
-    private void Start()
-    {
-        _switchScene.onClick.AddListener(SwitchDemoScene);
-    }
     public void ToogleDebug()
     {
         foreach (GameObject g in _debugObjects)
@@ -43,12 +38,5 @@ public class DebugController : MonoBehaviour
     public void AddMessageToPanel(string message)
     {
         _debugText.text += message;
-    }
-
-    public void SwitchDemoScene()
-    {
-        LoaderUtility.Deinitialize();
-        SceneManager.LoadScene(1, LoadSceneMode.Single);
-        LoaderUtility.Initialize();
     }
 }
