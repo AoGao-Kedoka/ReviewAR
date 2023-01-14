@@ -10,19 +10,21 @@ using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using TMPro;
+using MarkupAttributes;
+using UnityEditor;
+using MarkupAttributes.Editor;
+
+[CustomEditor(typeof(ARController)), CanEditMultipleObjects]
+internal class ARControllerEditor : MarkedUpEditor {}
 
 /// <summary>
 /// Controller for Geospatial sample.
 /// </summary>
 public class ARController : MonoBehaviour
 {
-    [Header("AR Components")]
+    [Box("AR")]
 
-    /// <summary>
-    /// The AREarthManager used .
-    /// </summary>
-    [SerializeField] AREarthManager _arEarthManager;
-
+    [TitleGroup("AR/AR Properties")]
     /// <summary>
     /// The ARCoreExtensions used .
     /// </summary>
@@ -33,8 +35,26 @@ public class ARController : MonoBehaviour
     /// </summary>
     [SerializeField] ARAnchorManager _arAnchorManager;
 
+    [TitleGroup("AR/Geospatial Properties")]
+    /// <summary>
+    /// The AREarthManager used .
+    /// </summary>
+    [SerializeField] AREarthManager _arEarthManager;
+
+    [EndGroup("AR")]
+
+
     [Header("UI")]
     [SerializeField] private UIController _uiController;
+
+
+    [Box("Debugger")]
+    [SerializeField] private DebugController _debugController;
+    [SerializeField] private bool _lockScreenToPortrait = true;
+    [SerializeField] private float _searchRadius;
+    [SerializeField] private GameObject _debuggerPrefab;
+    [SerializeField] private GameObject _arrow;
+    [EndGroup("Debugger")]
 
     #region Google Maps
     // <summary>
@@ -48,14 +68,6 @@ public class ARController : MonoBehaviour
     /// </summary>
     private PlacesApiQueryResponse _places = null;
     #endregion
-
-    [Header("Debugger")]
-    [SerializeField] private DebugController _debugController;
-    [SerializeField] private bool _lockScreenToPortrait = true;
-    [SerializeField] private float _searchRadius;
-    [SerializeField] private GameObject _debuggerPrefab;
-    [SerializeField] private GameObject _arrow;
-
 
     private bool _isReturning = false;
     private bool _enablingGeospatial = false;
@@ -477,6 +489,8 @@ public class ARController : MonoBehaviour
             var pose = _arEarthManager.CameraGeospatialPose;
             var anchor = _arAnchorManager.AddAnchor(pose.Latitude, pose.Longitude, pose.Altitude, pose.EunRotation);
             var anchorAsset = Instantiate(_debuggerPrefab, anchor.transform);
+            var text = anchorAsset.GetComponent<TMP_Text>();
+            text.text = "Debug anchor";
             Debug.Log("DEBUG: Instantiated a debug anchor: " + anchorAsset.name);
         }
     }

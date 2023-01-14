@@ -804,7 +804,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1612072798}
+      - m_Target: {fileID: 0}
         m_TargetAssemblyTypeName: ARController, Assembly-CSharp
         m_MethodName: InstantiatePoseAnchor
         m_Mode: 1
@@ -1749,7 +1749,7 @@ MonoBehaviour:
   _uiController: {fileID: 1969541384}
   _debugController: {fileID: 222144614}
   _lockScreenToPortrait: 0
-  _searchRadius: 100
+  _searchRadius: 50
   _debuggerPrefab: {fileID: 6070649297189834275, guid: d625a65b0c4fa764ca392d539c9cd7ff, type: 3}
   _arrow: {fileID: 1387374023}
 --- !u!1 &1658342287
