@@ -1900,6 +1900,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: d_arrow
       objectReference: {fileID: 0}
+    - target: {fileID: 4196089891730008136, guid: 0f27d37b27311004baeea4d8fad109d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4196089891730008137, guid: 0f27d37b27311004baeea4d8fad109d1, type: 3}
       propertyPath: m_RootOrder
       value: 0
