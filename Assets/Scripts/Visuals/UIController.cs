@@ -38,10 +38,12 @@ public class UIController : MonoBehaviour
     /// </summary>
     public void SpawnPlaces(PlacesApiQueryResponse places) {
         foreach (Place place in places.Places) {
-            var obj = Instantiate(this.InformationCanvas);
-            obj.transform.position = place.position;
-            obj.GetComponent<FillInformation>().FillInfo(place);
-            SpawnedPanels.Add(obj);
+            if (!place._anchorInstantiated)
+            {
+                var obj = Instantiate(this.InformationCanvas, place._geoAnchor.transform);
+                obj.GetComponent<FillInformation>().FillInfo(place);
+                SpawnedPanels.Add(obj);
+            }
         }
     }
 

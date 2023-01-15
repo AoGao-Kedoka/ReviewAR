@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Google.XR.ARCoreExtensions;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -54,6 +55,7 @@ public class Place
     [JsonProperty("takeout")]
     public bool? Takeout { get; set; }
 
-    public Vector3 position;
+    public ARGeospatialAnchor? _geoAnchor;
 
+    public bool _anchorInstantiated = false;
 }

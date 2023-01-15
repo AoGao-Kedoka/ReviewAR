@@ -12,7 +12,6 @@ using UnityEngine.XR.ARSubsystems;
 using TMPro;
 using MarkupAttributes;
 using UnityEditor;
-using System.Linq;
 
 #if UNITY_EDITOR
 using MarkupAttributes.Editor;
@@ -112,25 +111,11 @@ public class ARController : MonoBehaviour
     /// </summary>
     private int _requestCounter = 0;
 
-    /// <summary>
-    /// anchor instantiated for the current places list
-    /// </summary>
-    private bool _anchorAllInstantiated = false;
 
     /// <summary>
     /// history of instantiated anchor's name
     /// </summary>
     private List<string> _anchorsHistory = new List<string>();
-    struct TerrainAnchorInstantiator
-    {
-        public ARGeospatialAnchor _terrainAnchor;
-        public bool instantiated;
-        public void ToogleInstantiated(bool toogle)
-        {
-            instantiated = false;
-        }
-    }
-    private List<TerrainAnchorInstantiator> _anchorInstantiators = new List<TerrainAnchorInstantiator>();
 
     public void Awake()
     {
@@ -329,48 +314,12 @@ public class ARController : MonoBehaviour
         _debugController.UpdatePanelMessage("Success\n" + location_message + places_message);
 
         // set anchor
-        if (_places != null && !_anchorAllInstantiated)
-        {
-            DisplayAR();
-        }
-
-#region DEBUG
         if (_places != null)
-            _arrow.transform.LookAt(_anchorInstantiators[0]._terrainAnchor.transform);
-#endregion
+        {
+            _uiController.SpawnPlaces(_places);
+        }
     }
 
-    private void DisplayAR()
-    {
-        int counter = 0;
-        foreach(var anchor in _anchorInstantiators)
-        {
-            switch(anchor._terrainAnchor.terrainAnchorState)
-            {
-                case TerrainAnchorState.Success:
-                    if (!anchor.instantiated)
-                    {
-                        Instantiate(_debuggerPrefab, anchor._terrainAnchor.transform);
-                        var text = _debuggerPrefab.GetComponent<TMP_Text>();
-                        text.text = anchor._terrainAnchor.name;
-                        anchor.ToogleInstantiated(false);
-                    }
-                    counter++;
-                    Debug.Log("Instantiated anchor for: " + anchor._terrainAnchor.name);
-                    break;
-                case TerrainAnchorState.TaskInProgress:
-                    break;
-                default:
-                    Debug.LogError(anchor._terrainAnchor.terrainAnchorState);
-                    break;
-            }
-        }
-        if (counter == _anchorInstantiators.Count)
-        {
-            _anchorAllInstantiated = true;
-            Debug.Log("All anchor instantiated");
-        }
-    }
 
     private void FetchBussinessData()
     {
@@ -398,7 +347,6 @@ public class ARController : MonoBehaviour
                 Debug.Log("TaskCompleted");
 
                 _places = placesTask.Result;
-                _anchorAllInstantiated = false;
                 this._task_finished = true;
 
                 FindObjectsOfType<UIController>()[0].DespawnPlaces(_searchRadius, currentPose);
@@ -413,7 +361,6 @@ public class ARController : MonoBehaviour
                         !_anchorsHistory.Contains(place.Name)
                         )
                     {
-                        TerrainAnchorInstantiator anchor;
                         var terrainAnchor = _arAnchorManager.ResolveAnchorOnTerrain(
                             place.Geometry.Location.Lat,
                             place.Geometry.Location.Lng,
@@ -421,9 +368,8 @@ public class ARController : MonoBehaviour
                             Quaternion.identity
                             );
                         terrainAnchor.gameObject.name = place.Name;
-                        anchor.instantiated = false;
-                        anchor._terrainAnchor = terrainAnchor;
-                        _anchorInstantiators.Add(anchor);
+                        place._geoAnchor = terrainAnchor;
+                        place._anchorInstantiated = false;
                         _anchorsHistory.Add(place.Name);
                     }
                 }
