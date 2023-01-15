@@ -1743,12 +1743,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f1e5b6fd7060d047b22afe3159cedbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _arEarthManager: {fileID: 1159036413}
   _arCoreExtension: {fileID: 84888083}
   _arAnchorManager: {fileID: 1159036414}
+  _arEarthManager: {fileID: 1159036413}
   _uiController: {fileID: 1969541384}
   _debugController: {fileID: 222144614}
-  _lockScreenToPortrait: 0
+  _lockScreenToPortrait: 1
   _searchRadius: 50
   _debuggerPrefab: {fileID: 6070649297189834275, guid: d625a65b0c4fa764ca392d539c9cd7ff, type: 3}
   _arrow: {fileID: 1387374023}

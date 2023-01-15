@@ -35,7 +35,7 @@ public class BusinessData : MonoBehaviour
     // main(){
     //  var reviews = GetPlaces(-10.02, 30.1).Result; 
     // }
-    static async public Task<PlacesApiQueryResponse> GetPlaces(float latitude, float longitude, int radius)
+    static async public Task<PlacesApiQueryResponse> GetPlaces(double latitude, double longitude, int radius)
     {
         if (apiKey == null) { Application.Quit(); }
 

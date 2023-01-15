@@ -9,13 +9,13 @@ public class Location
     /// Location latitude,  optional
     /// </summary>
     [JsonProperty("lat")]
-    public float Lat { get; set; }
+    public double Lat { get; set; }
 
     /// <summary>
     /// Location longitutde,  optional
     /// </summary>
     [JsonProperty("lng")]
-    public float Lng { get; set; }
+    public double Lng { get; set; }
     //code from https://www.geeksforgeeks.org/program-distance-two-points-earth/
     static double toRadians(double angleIn10thofaDegree)
     {

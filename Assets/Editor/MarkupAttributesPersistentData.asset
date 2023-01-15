@@ -12,5 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: da0d25574c33ac64d98db1c615ce7ff9, type: 3}
   m_Name: MarkupAttributesPersistentData
   m_EditorClassIdentifier: 
-  serializedBoolEntries: []
+  serializedBoolEntries:
+  - key: ARController/AR
+    value: 1
+  - key: ARController/AR/AR Properties
+    value: 1
+  - key: ARController/AR/Geospatial Properties
+    value: 1
+  - key: ARController/UI
+    value: 1
+  - key: ARController/Debugger
+    value: 1
   serializedIntEntries: []

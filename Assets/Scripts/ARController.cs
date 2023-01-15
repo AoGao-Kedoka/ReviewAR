@@ -12,16 +12,22 @@ using UnityEngine.XR.ARSubsystems;
 using TMPro;
 using MarkupAttributes;
 using UnityEditor;
-using MarkupAttributes.Editor;
+using System.Linq;
 
-[CustomEditor(typeof(ARController)), CanEditMultipleObjects]
-internal class ARControllerEditor : MarkedUpEditor {}
+#if UNITY_EDITOR
+using MarkupAttributes.Editor;
+#endif
 
 /// <summary>
 /// Controller for Geospatial sample.
 /// </summary>
 public class ARController : MonoBehaviour
 {
+#if UNITY_EDITOR
+    [CustomEditor(typeof(ARController)), CanEditMultipleObjects]
+    internal class ARControllerEditor : MarkedUpEditor {}
+#endif
+
     [Box("AR")]
 
     [TitleGroup("AR/AR Properties")]
@@ -56,7 +62,7 @@ public class ARController : MonoBehaviour
     [SerializeField] private GameObject _arrow;
     [EndGroup("Debugger")]
 
-    #region Google Maps
+#region Google Maps
     // <summary>
     /// indicate when async task has returned results, set it back to false when finished
     /// </summary>
@@ -67,7 +73,7 @@ public class ARController : MonoBehaviour
     /// places got from the api requests
     /// </summary>
     private PlacesApiQueryResponse _places = null;
-    #endregion
+#endregion
 
     private bool _isReturning = false;
     private bool _enablingGeospatial = false;
@@ -112,8 +118,9 @@ public class ARController : MonoBehaviour
     private bool _anchorAllInstantiated = false;
 
     /// <summary>
-    /// anchors instantiator 
+    /// history of instantiated anchor's name
     /// </summary>
+    private List<string> _anchorsHistory = new List<string>();
     struct TerrainAnchorInstantiator
     {
         public ARGeospatialAnchor _terrainAnchor;
@@ -300,7 +307,7 @@ public class ARController : MonoBehaviour
                 pose.OrientationYawAccuracy.ToString());
             FetchBussinessData();
         }
-        #region DEBUG
+#region DEBUG
         var places_message = "";
         if (_places != null)
         {
@@ -309,7 +316,7 @@ public class ARController : MonoBehaviour
                 places_message += place.Name + "\t";
             }
         }
-        #endregion
+#endregion
         if (!isSessionReady || _arEarthManager.EarthTrackingState != TrackingState.Tracking ||
             _arEarthManager.CameraGeospatialPose.OrientationYawAccuracy > _orientationYawAccuracyThreshold ||
             _arEarthManager.CameraGeospatialPose.HorizontalAccuracy > _horizontalAccuracyThreshold)
@@ -327,10 +334,10 @@ public class ARController : MonoBehaviour
             DisplayAR();
         }
 
-        #region DEBUG
+#region DEBUG
         if (_places != null)
             _arrow.transform.LookAt(_anchorInstantiators[0]._terrainAnchor.transform);
-        #endregion
+#endregion
     }
 
     private void DisplayAR()
@@ -358,7 +365,11 @@ public class ARController : MonoBehaviour
                     break;
             }
         }
-        if (counter == _anchorInstantiators.Count) _anchorAllInstantiated = true;
+        if (counter == _anchorInstantiators.Count)
+        {
+            _anchorAllInstantiated = true;
+            Debug.Log("All anchor instantiated");
+        }
     }
 
     private void FetchBussinessData()
@@ -375,7 +386,10 @@ public class ARController : MonoBehaviour
 
                 if (placesTask != null) { placesTask.Dispose(); placesTask = null; }
                 _requestCounter++;
-                placesTask = Task.Run(() => BusinessData.GetPlaces(currentPose.x, currentPose.y, (int)_searchRadius));
+                placesTask = Task.Run(() => BusinessData.GetPlaces(
+                    _arEarthManager.CameraGeospatialPose.Latitude,
+                    _arEarthManager.CameraGeospatialPose.Longitude,
+                    (int)_searchRadius));
                 _lastSavedPosition = currentPose;
             }
 
@@ -395,7 +409,9 @@ public class ARController : MonoBehaviour
                 foreach (var place in _places.Places)
                 {
                     if (_arEarthManager.EarthState == EarthState.Enabled &&
-                        _arEarthManager.EarthTrackingState == TrackingState.Tracking)
+                        _arEarthManager.EarthTrackingState == TrackingState.Tracking &&
+                        !_anchorsHistory.Contains(place.Name)
+                        )
                     {
                         TerrainAnchorInstantiator anchor;
                         var terrainAnchor = _arAnchorManager.ResolveAnchorOnTerrain(
@@ -408,6 +424,7 @@ public class ARController : MonoBehaviour
                         anchor.instantiated = false;
                         anchor._terrainAnchor = terrainAnchor;
                         _anchorInstantiators.Add(anchor);
+                        _anchorsHistory.Add(place.Name);
                     }
                 }
             }
