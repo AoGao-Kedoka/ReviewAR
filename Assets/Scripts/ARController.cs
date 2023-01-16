@@ -55,10 +55,6 @@ public class ARController : MonoBehaviour
 
     [Box("Debugger")]
     [SerializeField] private DebugController _debugController;
-    [SerializeField] private bool _lockScreenToPortrait = true;
-    [SerializeField] private float _searchRadius;
-    [SerializeField] private GameObject _debuggerPrefab;
-    [SerializeField] private GameObject _arrow;
     [EndGroup("Debugger")]
 
 #region Google Maps
@@ -119,7 +115,7 @@ public class ARController : MonoBehaviour
 
     public void Awake()
     {
-        if (_lockScreenToPortrait)
+        if (_debugController._lockScreenToPortrait)
         {
             // Lock screen to portrait.
             Screen.autorotateToLandscapeLeft = false;
@@ -318,6 +314,9 @@ public class ARController : MonoBehaviour
         {
             _uiController.SpawnPlaces(_places);
         }
+
+        // debug arrow
+        _debugController._arrow.transform.LookAt(_places.Places[_debugController._indexArrowShows]._terrainAnchor.transform);
     }
 
 
@@ -329,7 +328,7 @@ public class ARController : MonoBehaviour
         {
 
             if (TrackingState.Tracking == _arEarthManager.EarthTrackingState && _requestCounter == 0 &&
-                ((_lastSavedPosition == Vector2.zero) || Location.FindDistance(currentPose.x, _lastSavedPosition.x, currentPose.y, _lastSavedPosition.y) < (_searchRadius / 2)))
+                ((_lastSavedPosition == Vector2.zero) || Location.FindDistance(currentPose.x, _lastSavedPosition.x, currentPose.y, _lastSavedPosition.y) < (_debugController._searchRadius / 2)))
             {
                 Debug.Log("TaskStarted");
 
@@ -338,7 +337,7 @@ public class ARController : MonoBehaviour
                 placesTask = Task.Run(() => BusinessData.GetPlaces(
                     _arEarthManager.CameraGeospatialPose.Latitude,
                     _arEarthManager.CameraGeospatialPose.Longitude,
-                    (int)_searchRadius));
+                    (int)_debugController._searchRadius));
                 _lastSavedPosition = currentPose;
             }
 
@@ -349,8 +348,8 @@ public class ARController : MonoBehaviour
                 _places = placesTask.Result;
                 this._task_finished = true;
 
-                FindObjectsOfType<UIController>()[0].DespawnPlaces(_searchRadius, currentPose);
-                FindObjectsOfType<UIController>()[0].SpawnPlaces(_places);
+                // FindObjectsOfType<UIController>()[0].DespawnPlaces(_debugController._searchRadius, currentPose);
+                // FindObjectsOfType<UIController>()[0].SpawnPlaces(_places);
                 placesTask = null;
 
                 // Create Terrain Anchors
@@ -368,7 +367,7 @@ public class ARController : MonoBehaviour
                             Quaternion.identity
                             );
                         terrainAnchor.gameObject.name = place.Name;
-                        place._geoAnchor = terrainAnchor;
+                        place._terrainAnchor = terrainAnchor;
                         place._anchorInstantiated = false;
                         _anchorsHistory.Add(place.Name);
                     }
@@ -379,7 +378,7 @@ public class ARController : MonoBehaviour
         catch (Exception ex)
         {
 
-            var obj = Instantiate(this._debuggerPrefab);
+            var obj = Instantiate(this._debugController._debuggerPrefab);
             obj.name = "exception" + ex.Message;
         }
     }
@@ -451,7 +450,7 @@ public class ARController : MonoBehaviour
         {
             var pose = _arEarthManager.CameraGeospatialPose;
             var anchor = _arAnchorManager.AddAnchor(pose.Latitude, pose.Longitude, pose.Altitude, pose.EunRotation);
-            var anchorAsset = Instantiate(_debuggerPrefab, anchor.transform);
+            var anchorAsset = Instantiate(_debugController._debuggerPrefab, anchor.transform);
             var text = anchorAsset.GetComponent<TMP_Text>();
             text.text = "Debug anchor";
             Debug.Log("DEBUG: Instantiated a debug anchor: " + anchorAsset.name);

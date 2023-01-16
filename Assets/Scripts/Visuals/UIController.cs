@@ -38,9 +38,26 @@ public class UIController : MonoBehaviour
     /// </summary>
     public void SpawnPlaces(PlacesApiQueryResponse places) {
         foreach (Place place in places.Places) {
+            // Check terrain anchor state
+            var terrainAnchor = place._terrainAnchor;
+            if (terrainAnchor == null || 
+                terrainAnchor.terrainAnchorState != Google.XR.ARCoreExtensions.TerrainAnchorState.Success)
+            {
+                if (terrainAnchor == null)
+                {
+                    Debug.LogError($"Terrain Anchor is null");
+                    return;
+                }
+                if (terrainAnchor.terrainAnchorState != Google.XR.ARCoreExtensions.TerrainAnchorState.TaskInProgress)
+                    Debug.LogError($"Terrain Anchor encountered an error: {terrainAnchor.terrainAnchorState}");
+                return; 
+            }
+            Debug.Log($"Anchor {place._terrainAnchor.name} created successfully");
+            
+            // Instantiate panel 
             if (!place._anchorInstantiated)
             {
-                var obj = Instantiate(this.InformationCanvas, place._geoAnchor.transform);
+                var obj = Instantiate(this.InformationCanvas, place._terrainAnchor?.transform);
                 obj.GetComponent<FillInformation>().FillInfo(place);
                 SpawnedPanels.Add(obj);
             }

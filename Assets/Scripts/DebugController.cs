@@ -4,24 +4,48 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
-using UnityEngine.XR.ARFoundation;
+using MarkupAttributes;
+
+#if UNITY_EDITOR
+using UnityEditor;
+using MarkupAttributes.Editor;
+
+[CustomEditor(typeof(DebugController)), CanEditMultipleObjects]
+internal class DebugControllerEditor : MarkedUpEditor {}
+#endif
 
 public class DebugController : MonoBehaviour
 {
-    private bool active = true;
+    [Box("Properties")]
+    [SerializeField] private bool _active = true;
+    [SerializeField] public float _searchRadius;
+    [EndGroup("Properties")]
+
+    [Box("Debug Objects")]
+    [ShowIf(nameof(_active))]
+    [SerializeField] public bool _lockScreenToPortrait = true;
+
     [Tooltip("Debugging objects that should be handled by this sript")]
+    [ShowIf(nameof(_active))]
     [SerializeField] private List<GameObject> _debugObjects;
+
+    [TitleGroup("./Other gameobjects with custom behavior")]
+    [ShowIf(nameof(_active))]
     [SerializeField] private TMP_Text _debugText;
+    [ShowIf(nameof(_active))]
+    [SerializeField] public GameObject _debuggerPrefab;
+    [ShowIf(nameof(_active))]
+    [SerializeField] public int _indexArrowShows;
+    [ShowIf(nameof(_active))]
+    [SerializeField] public GameObject _arrow;
 
-    public void ToogleDebug()
+    private void Start()
     {
-        foreach (GameObject g in _debugObjects)
+        foreach (var obj in _debugObjects)
         {
-            g.SetActive(!active);
+            obj?.SetActive(_active);
         }
-        active = !active;
     }
-
     /// <summary>
     /// clear panel and update debug message on the panel
     /// </summary>

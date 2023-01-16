@@ -23,4 +23,10 @@ MonoBehaviour:
     value: 1
   - key: ARController/Debugger
     value: 1
+  - key: DebugController/Properties
+    value: 1
+  - key: DebugController/Debug Objects
+    value: 1
+  - key: DebugController/Debug Objects/Other gameobjects with custom behavior
+    value: 1
   serializedIntEntries: []

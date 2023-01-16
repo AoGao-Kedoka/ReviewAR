@@ -55,7 +55,7 @@ public class Place
     [JsonProperty("takeout")]
     public bool? Takeout { get; set; }
 
-    public ARGeospatialAnchor? _geoAnchor;
+    public ARGeospatialAnchor? _terrainAnchor;
 
     public bool _anchorInstantiated = false;
 }
