@@ -26,9 +26,8 @@ public class FillInformation : MonoBehaviour
         if (place.Rating.HasValue)
         {
             this.transform.Find("MetadataPanel/ReviewsSection/ReviewsScore").GetComponent<TextMeshProUGUI>().text = place.Rating.Value.ToString();
-            this.transform.Find("MetadataPanel/ReviewsSection/ReviewScoreImages/ColorImageS").GetComponent<RectTransform>()
-                                          .sizeDelta
-                                          .Scale((new Vector3(place.Rating.Value / 5.0f, 1.0f, 1.0f)));
+            var RTComponent = this.transform.Find("MetadataPanel/ReviewsSection/ReviewScoreImages/ColorImageS").GetComponent<RectTransform>();
+            RTComponent.sizeDelta = new Vector2(RTComponent.sizeDelta.x * (place.Rating.Value / 5.0f), RTComponent.sizeDelta.y);
 
         }
         else
@@ -39,8 +38,8 @@ public class FillInformation : MonoBehaviour
         if (place.Price_level.HasValue)
         {
             this.transform.Find("MetadataPanel/PriceSection/PricesScore").GetComponent<TextMeshProUGUI>().text = place.Price_level.Value.ToString();
-            this.transform.Find("MetadataPanel/PriceSection/PriceImages/ColorImageP").GetComponent<RectTransform>()
-                                          .sizeDelta.Scale((new Vector3(place.Price_level.Value / 4.0f, 1.0f, 1.0f)));
+            var RTComponent = this.transform.Find("MetadataPanel/PriceSection/PriceImages/ColorImageP").GetComponent<RectTransform>();
+            RTComponent.sizeDelta = new Vector2(RTComponent.sizeDelta.x * (place.Price_level.Value / 4.0f), RTComponent.sizeDelta.y);
 
         }
         else
@@ -78,12 +77,14 @@ public class FillInformation : MonoBehaviour
             this.transform.Find("MetadataPanel/ReviewsSection/ReviewExpandButton").GetComponent<ExpandButton>().ButtonPressed();
 
             int i = 1;
+            Debug.Log("cout:");
+
+            Debug.Log(place.Reviews?.Count);
             for (; i <= place.Reviews?.Count; ++i)
             {
                 this.transform.Find(string.Format("ReviewsPanel/Review{0}/ReviewText{0}", i)).GetComponent<TextMeshProUGUI>().text = place.Reviews[i].Text;
-                this.transform.Find(string.Format("ReviewsPanel/Review{0}/ColorImage{0}", i)).GetComponent<RectTransform>()
-                           .sizeDelta.Scale((new Vector3(place.Rating.Value / 5.0f, 1.0f, 1.0f)));
-
+                var RTComponent = this.transform.Find(string.Format("ReviewsPanel/Review{0}/ColorImage{0}", i)).GetComponent<RectTransform>();
+                RTComponent.sizeDelta = new Vector2(RTComponent.sizeDelta.x * (place.Rating.Value / 5.0f), RTComponent.sizeDelta.y);
             }
             for (; i <= 3; ++i)
             {
