@@ -5,6 +5,8 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using MarkupAttributes;
+using Google.XR.ARCoreExtensions;
+using UnityEngine.XR.ARFoundation;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -29,7 +31,7 @@ public class DebugController : MonoBehaviour
     [ShowIf(nameof(_active))]
     [SerializeField] private List<GameObject> _debugObjects;
 
-    [TitleGroup("./Other gameobjects with custom behavior")]
+    [Header("Other gameobjects with custom behavior")]
     [ShowIf(nameof(_active))]
     [SerializeField] private TMP_Text _debugText;
     [ShowIf(nameof(_active))]
@@ -38,12 +40,27 @@ public class DebugController : MonoBehaviour
     [SerializeField] public int _indexArrowShows;
     [ShowIf(nameof(_active))]
     [SerializeField] public GameObject _arrow;
+    [ShowIf(nameof(_active))]
+    [Header("Create Prefab with Button Click")]
+    [SerializeField] public Button _createAnchorButton;
+    [ShowIf(nameof(_active))]
+    [SerializeField] public GameObject _buttonCreatedPrefabs;
+    [EndGroup("Debug Objects")]
+
+    private AREarthManager _arEarthManager;
+    private ARAnchorManager _arAnchorManager;
 
     private void Start()
     {
         foreach (var obj in _debugObjects)
         {
             obj?.SetActive(_active);
+        }
+        if (_active)
+        {
+            _arEarthManager = FindObjectOfType<AREarthManager>();
+            _arAnchorManager = FindObjectOfType<ARAnchorManager>();
+            _createAnchorButton.onClick.AddListener(InstantiatePoseAnchor);
         }
     }
     /// <summary>
@@ -62,5 +79,22 @@ public class DebugController : MonoBehaviour
     public void AddMessageToPanel(string message)
     {
         _debugText.text += message;
+    }
+        
+    /// <summary>
+    /// Button behaviour when onclick
+    /// A _buttonCreatedPrefab will generated at current camera's pose
+    /// </summary>
+    public void InstantiatePoseAnchor()
+    {
+        if (_arEarthManager.EarthTrackingState == UnityEngine.XR.ARSubsystems.TrackingState.Tracking)
+        {
+            var pose = _arEarthManager.CameraGeospatialPose;
+            var anchor = _arAnchorManager.AddAnchor(pose.Latitude, pose.Longitude, pose.Altitude, pose.EunRotation);
+            var anchorAsset = Instantiate(_buttonCreatedPrefabs, anchor.transform);
+            var text = anchorAsset.GetComponent<TMP_Text>();
+            text.text = "Debug anchor";
+            Debug.Log("DEBUG: Instantiated a debug anchor: " + anchorAsset.name);
+        }
     }
 }

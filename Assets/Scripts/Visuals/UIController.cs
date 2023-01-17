@@ -8,6 +8,13 @@ public class UIController : MonoBehaviour
 {
     [SerializeField] private Image _localizingImage;
     [SerializeField] GameObject InformationCanvas;
+
+    /// <summary>
+    /// Get access to all debug variables
+    /// </summary>
+    [Header("Debug Stuffs")]
+    [SerializeField] private DebugController _debugController;
+
     private List<GameObject> SpawnedPanels = new List<GameObject>();
 
     /// <summary>
@@ -31,8 +38,6 @@ public class UIController : MonoBehaviour
     }
 
 
-    // TODO: need orientation from ao
-    //       also need to clarify who holds the objects
     /// <summary>
     /// Spawns all the panels
     /// </summary>
@@ -45,21 +50,24 @@ public class UIController : MonoBehaviour
             {
                 if (terrainAnchor == null)
                 {
-                    Debug.LogError($"Terrain Anchor is null");
-                    return;
+                    Debug.LogError($"Terrain Anchor is null for place {place.Name}");
+                    continue;
                 }
                 if (terrainAnchor.terrainAnchorState != Google.XR.ARCoreExtensions.TerrainAnchorState.TaskInProgress)
-                    Debug.LogError($"Terrain Anchor encountered an error: {terrainAnchor.terrainAnchorState}");
-                return; 
+                    Debug.LogError($"Terrain Anchor encountered an error: {terrainAnchor.terrainAnchorState} for place {place.Name}");
+                continue;
             }
-            Debug.Log($"Anchor {place._terrainAnchor.name} created successfully");
             
             // Instantiate panel 
             if (!place._anchorInstantiated)
             {
-                var obj = Instantiate(this.InformationCanvas, place._terrainAnchor?.transform);
-                obj.GetComponent<FillInformation>().FillInfo(place);
-                SpawnedPanels.Add(obj);
+                Debug.Log($"Anchor {place._terrainAnchor.name} created successfully");
+                Instantiate(_debugController._debuggerPrefab, place._terrainAnchor?.transform);
+                place._anchorInstantiated = true;
+                // TODO: Change it to UI panel
+                // var obj = Instantiate(this.InformationCanvas, place._terrainAnchor?.transform);
+                // obj.GetComponent<FillInformation>().FillInfo(place);
+                // SpawnedPanels.Add(obj);
             }
         }
     }

@@ -313,10 +313,11 @@ public class ARController : MonoBehaviour
         if (_places != null)
         {
             _uiController.SpawnPlaces(_places);
+
+            // debug arrow
+            _debugController._arrow.transform.LookAt(_places.Places[_debugController._indexArrowShows]._terrainAnchor.transform);
         }
 
-        // debug arrow
-        _debugController._arrow.transform.LookAt(_places.Places[_debugController._indexArrowShows]._terrainAnchor.transform);
     }
 
 
@@ -444,16 +445,4 @@ public class ARController : MonoBehaviour
         _isReady = false;
     }
 
-    public void InstantiatePoseAnchor()
-    {
-        if (_arEarthManager.EarthTrackingState == TrackingState.Tracking)
-        {
-            var pose = _arEarthManager.CameraGeospatialPose;
-            var anchor = _arAnchorManager.AddAnchor(pose.Latitude, pose.Longitude, pose.Altitude, pose.EunRotation);
-            var anchorAsset = Instantiate(_debugController._debuggerPrefab, anchor.transform);
-            var text = anchorAsset.GetComponent<TMP_Text>();
-            text.text = "Debug anchor";
-            Debug.Log("DEBUG: Instantiated a debug anchor: " + anchorAsset.name);
-        }
-    }
 }
