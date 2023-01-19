@@ -215,7 +215,7 @@ MonoBehaviour:
   _indexArrowShows: 1
   _arrow: {fileID: 1387374023}
   _createAnchorButton: {fileID: 887680491}
-  _buttonCreatedPrefabs: {fileID: 8258379876568005926, guid: 43cac0883040d7540960e6eff15156e7, type: 3}
+  _buttonCreatedPrefabs: {fileID: 7790084454348801337, guid: 1885a02839ae0de4dafe9bd735b7f140, type: 3}
 --- !u!4 &222144615
 Transform:
   m_ObjectHideFlags: 0
