@@ -1,14 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 
 public class FillInformation : MonoBehaviour
 {
-    private GameObject MetadataPanel;
-    private GameObject ReviewsPanel;
     public Location PlaceLocation;//how to find distance
+    public static Mutex mut = new Mutex();
+    public  Place UpdatedPlace = null;
+    private bool CalledOnce = false;
 
+    GameObject ReviewExpandButton;
+    GameObject[] ReviewObjects;
     /// <summary>
     /// Fills the info of panel with business details
     /// </summary>
@@ -68,31 +70,73 @@ public class FillInformation : MonoBehaviour
             this.transform.Find("MetadataPanel/ExternalButton").gameObject.SetActive(false);
         }
 
-        if (place.Reviews?.Count == 0)
+        if (place.Reviews == null || place.Reviews.Count == 0)
         {
-            this.transform.Find("MetadataPanel/ReviewsSection/ReviewExpandButton").gameObject.SetActive(false);
+            mut.WaitOne();
+
+            this.ReviewExpandButton.GetComponent<ExpandButton>().Disable();
+            this.ReviewExpandButton.gameObject.SetActive(false);
+            mut.ReleaseMutex();
+
         }
         else//TODO: finish the image logic
         {
-            this.transform.Find("MetadataPanel/ReviewsSection/ReviewExpandButton").GetComponent<ExpandButton>().ButtonPressed();
-
-            int i = 1;
-            Debug.Log("cout:");
-
-            Debug.Log(place.Reviews?.Count);
-            for (; i <= place.Reviews?.Count; ++i)
+            mut.WaitOne();
+            if (!this.CalledOnce)
             {
-                this.transform.Find(string.Format("ReviewsPanel/Review{0}/ReviewText{0}", i)).GetComponent<TextMeshProUGUI>().text = place.Reviews[i].Text;
-                var RTComponent = this.transform.Find(string.Format("ReviewsPanel/Review{0}/ColorImage{0}", i)).GetComponent<RectTransform>();
-                RTComponent.sizeDelta = new Vector2(RTComponent.sizeDelta.x * (place.Rating.Value / 5.0f), RTComponent.sizeDelta.y);
+                FillReviews(place);
             }
-            for (; i <= 3; ++i)
-            {
-                this.transform.Find(string.Format("ReviewsPanel/Review{0}", i)).gameObject.SetActive(false);
-               //GameObject.Find(string.Format("ReviewImage{0}", i)).SetActive(false);
-            }
+            mut.ReleaseMutex();
 
         }
         this.PlaceLocation = place.Geometry.Location;
     }
+
+    public void FillReviews(Place place)
+    {
+        this.ReviewExpandButton.SetActive(true);
+
+        // dont remember why i had this
+        this.ReviewExpandButton.GetComponent<ExpandButton>().Enable();
+
+        int i = 1;
+        Debug.Log("cout:");
+
+        Debug.Log(place.Reviews?.Count);
+        for (; i <= place.Reviews?.Count && i <= 3; ++i)
+        {
+           this.ReviewObjects[i-1].GetComponentInChildren<TextMeshProUGUI>().text = place.Reviews[i-1].Text;
+
+            var RTComponent = this.ReviewObjects[i - 1].transform.Find(string.Format("ReviewImage{0}/ColorImage{0}", i)).GetComponent<RectTransform>();
+            RTComponent.sizeDelta = new Vector2(RTComponent.sizeDelta.x * (place.Reviews[i - 1].Rating / 5.0f), RTComponent.sizeDelta.y);
+        }
+        for (; i <= 3; ++i)
+        {
+            this.ReviewObjects[i-1].SetActive(false);
+        }
+    }
+    private void Update()
+    {
+
+        mut.WaitOne();
+        if (UpdatedPlace != null && !CalledOnce)
+        {
+            CalledOnce = true;
+            FillReviews(UpdatedPlace);
+            UpdatedPlace = null;
+        }
+        mut.ReleaseMutex();
+    }
+
+    public void init()
+    {
+        this.UpdatedPlace = null;
+        this.ReviewExpandButton = this.transform.Find("MetadataPanel/ReviewsSection/ReviewExpandButton").gameObject;
+        this.ReviewObjects = new GameObject[3];
+        for(int i = 1; i <= 3; ++i)
+        {
+            this.ReviewObjects[i - 1] = this.transform.Find(string.Format("ReviewsPanel/Review{0}", i)).gameObject;
+        }
+    }
 }
+

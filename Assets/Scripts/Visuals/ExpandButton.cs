@@ -23,13 +23,13 @@ public class ExpandButton : MonoBehaviour
         }
     }
 
-    private void Enable()
+    public void Enable()
     {
         this.PanelStatus = Status.Expanded;
         this.ReviewsPanel.gameObject.SetActive(true);
         this.TextComponent.text = "<";
     }
-    private void Disable()
+    public void Disable()
     {
         this.PanelStatus = Status.Collapsed;
         this.ReviewsPanel.gameObject.SetActive(false);

@@ -8,14 +8,7 @@ public class UIController : MonoBehaviour
 {
     [SerializeField] private Image _localizingImage;
     [SerializeField] GameObject InformationCanvas;
-
-    /// <summary>
-    /// Get access to all debug variables
-    /// </summary>
-    [Header("Debug Stuffs")]
-    [SerializeField] private DebugController _debugController;
-
-    private List<GameObject> SpawnedPanels = new List<GameObject>();
+    public Dictionary<string, GameObject> SpawnedPanels = new Dictionary<string, GameObject>();
 
     /// <summary>
     /// Enable localizing icon in the center of screen
@@ -43,8 +36,11 @@ public class UIController : MonoBehaviour
     /// </summary>
     public void SpawnPlaces(PlacesApiQueryResponse places) {
         foreach (Place place in places.Places) {
-            // Check terrain anchor state
-            var terrainAnchor = place._terrainAnchor;
+            if (!this.SpawnedPanels.ContainsKey(place.Name))
+            {
+
+                // Check terrain anchor state
+                  var terrainAnchor = place._terrainAnchor;
             if (terrainAnchor == null || 
                 terrainAnchor.terrainAnchorState != Google.XR.ARCoreExtensions.TerrainAnchorState.Success)
             {
@@ -55,19 +51,18 @@ public class UIController : MonoBehaviour
                 }
                 if (terrainAnchor.terrainAnchorState != Google.XR.ARCoreExtensions.TerrainAnchorState.TaskInProgress)
                     Debug.LogError($"Terrain Anchor encountered an error: {terrainAnchor.terrainAnchorState} for place {place.Name}");
-                continue;
-            }
-            
-            // Instantiate panel 
-            if (!place._anchorInstantiated)
-            {
-                Debug.Log($"Anchor {place._terrainAnchor.name} created successfully");
-                Instantiate(_debugController._debuggerPrefab, place._terrainAnchor?.transform);
-                place._anchorInstantiated = true;
-                // TODO: Change it to UI panel
-                // var obj = Instantiate(this.InformationCanvas, place._terrainAnchor?.transform);
-                // obj.GetComponent<FillInformation>().FillInfo(place);
-                // SpawnedPanels.Add(obj);
+                    continue;
+                }
+
+                // Instantiate panel 
+                if (!place._anchorInstantiated)
+                {
+                    Debug.Log($"Anchor {place._terrainAnchor.name} created successfully");
+                    var obj = Instantiate(this.InformationCanvas,  place._terrainAnchor?.transform);
+                    obj.GetComponent<FillInformation>().init();
+                    obj.GetComponent<FillInformation>().FillInfo(place);
+                    SpawnedPanels.Add(place.Name, obj);
+                }
             }
         }
     }
@@ -75,15 +70,15 @@ public class UIController : MonoBehaviour
     public void DespawnPlaces(float radius, Vector2 currentLocation)
     {
 
-        foreach (GameObject canvas in this.SpawnedPanels)
+        foreach (var item in this.SpawnedPanels)
         {
-            if (Location.FindDistance(canvas.GetComponent<FillInformation>().PlaceLocation.Lat,
+            if (Location.FindDistance(item.Value.GetComponent<FillInformation>().PlaceLocation.Lat,
                                       currentLocation.x,
-                                      canvas.GetComponent<FillInformation>().PlaceLocation.Lng,
+                                      item.Value.GetComponent<FillInformation>().PlaceLocation.Lng,
                                       currentLocation.y
                                       ) > radius){ 
-                this.SpawnedPanels.Remove(canvas);
-                Destroy(canvas.gameObject);
+                this.SpawnedPanels.Remove(item.Key);
+                Destroy(item.Value.gameObject);
             }
         }
     }

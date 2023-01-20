@@ -8,4 +8,9 @@ public class PlacesApiQueryResponse
     /// </summary>
     [JsonProperty("results")]
     public List<Place> Places { get; set; }
+    /// <summary>
+    /// When requesting single place details
+    /// </summary>
+    [JsonProperty("result")]
+    public Place Place { get; set; }
 }

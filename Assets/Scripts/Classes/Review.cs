@@ -14,7 +14,7 @@ public class Review
     /// Rating for this review, optional
     /// </summary>
     [JsonProperty("rating")]
-    public string Rating { get; set; }
+    public float Rating { get; set; }
 
     /// <summary>
     /// Review text, optional
