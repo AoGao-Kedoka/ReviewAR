@@ -201,7 +201,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa4965a670c86634ba7a2f9701f31e28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _active: 1
+  _active: 0
   _searchRadius: 40
   _lockScreenToPortrait: 1
   _debugObjects:
@@ -1332,7 +1332,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1439082257
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2483,7 +2483,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _localizingImage: {fileID: 1737495960}
   InformationCanvas: {fileID: 7790084454348801337, guid: 1885a02839ae0de4dafe9bd735b7f140, type: 3}
-  _debugController: {fileID: 222144614}
 --- !u!4 &1969541385
 Transform:
   m_ObjectHideFlags: 0
