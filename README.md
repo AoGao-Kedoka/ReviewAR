@@ -24,4 +24,5 @@ RELEASE from Github or https://nextcloud.in.tum.de/index.php/s/WcziEHtkWkGAkDy
 - Logo generated with DALLE 2
 - unity-tweens (https://github.com/jeffreylanters/unity-tweens)
 - HierarchyDecorator (https://github.com/WooshiiDev/HierarchyDecorator)
+- InGameDebugConsole (https://github.com/yasirkula/UnityIngameDebugConsole)
 - Markup-Attributes (https://github.com/gasgiant/Markup-Attributes#conditionals)
