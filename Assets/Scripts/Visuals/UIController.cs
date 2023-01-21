@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using ElRaccoone.Tweens;
+using System.Threading.Tasks;
 
 public class UIController : MonoBehaviour
 {
     [SerializeField] private Image _localizingImage;
     [SerializeField] GameObject InformationCanvas;
+    [SerializeField] private GameObject _playerCam;
     public Dictionary<string, GameObject> SpawnedPanels = new Dictionary<string, GameObject>();
 
     /// <summary>
@@ -62,6 +64,20 @@ public class UIController : MonoBehaviour
                     obj.GetComponent<FillInformation>().init();
                     obj.GetComponent<FillInformation>().FillInfo(place);
                     SpawnedPanels.Add(place.Name, obj);
+                    FillInformation fillComponent = obj.GetComponent<FillInformation>();
+                    Task.Run(async () => await BusinessData.GetFullPlace(place))
+                                                .ContinueWith((result) =>
+                                                {
+                                                    place.Reviews = result.Result.Reviews;
+                                                    var panelobj = this.SpawnedPanels[place.Name];
+                                                    if (panelobj != null)
+                                                    {
+                                                        FillInformation.mut.WaitOne();
+                                                        fillComponent.UpdatedPlace = place;
+                                                        FillInformation.mut.ReleaseMutex();
+                                                    }
+                                                }
+                                               );
                 }
             }
         }

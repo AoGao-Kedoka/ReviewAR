@@ -312,7 +312,7 @@ public class ARController : MonoBehaviour
         // set anchor
         if (_places != null)
         {
-            _uiController.DespawnPlaces(_debugController._searchRadius, this._lastSavedPosition);
+            // _uiController.DespawnPlaces(_debugController._searchRadius, this._lastSavedPosition);
             _uiController.SpawnPlaces(_places);
 
             // debug arrow
@@ -324,8 +324,6 @@ public class ARController : MonoBehaviour
 
     private void FetchBussinessData()
     {
-        Debug.Log("FetchBussinessData");
-
         //fetch business data
         var currentPose = new Vector2((float)_arEarthManager.CameraGeospatialPose.Latitude, (float)_arEarthManager.CameraGeospatialPose.Longitude);
         try
@@ -357,23 +355,6 @@ public class ARController : MonoBehaviour
                 // Create Terrain Anchors
                 foreach (Place place in _places.Places)
                 {
-
-                    FillInformation fillComponent = this._uiController.SpawnedPanels[place.Name].GetComponent<FillInformation>();
-
-                     Task.Run(async () => await BusinessData.GetFullPlace(place))
-                                                .ContinueWith((result) =>
-                                                {
-                                                    place.Reviews = result.Result.Reviews;
-                                                    var panelobj = this._uiController.SpawnedPanels[place.Name];
-                                                    if (panelobj != null)
-                                                    {
-                                                        FillInformation.mut.WaitOne();
-                                                        fillComponent.UpdatedPlace = place;
-                                                        FillInformation.mut.ReleaseMutex();
-                                                    }
-                                                }
-                                               );
-
                     if (_arEarthManager.EarthState == EarthState.Enabled &&
                         _arEarthManager.EarthTrackingState == TrackingState.Tracking &&
                         !_anchorsHistory.Contains(place.Name)
@@ -399,6 +380,7 @@ public class ARController : MonoBehaviour
 
             var obj = Instantiate(this._debugController._debuggerPrefab);
             obj.name = "exception" + ex.Message;
+            Debug.Log("exception" + ex.Message);
         }
     }
 
