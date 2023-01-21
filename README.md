@@ -19,9 +19,10 @@ If you want to enable Debug of this project, the main debug option is located at
   
 ![image](https://user-images.githubusercontent.com/58142398/212759305-82cd58a7-76d3-4e29-a185-ae10145fdd6b.png)
 # Download
-TO BE ANNOUCED
+Please write us for downloads cause we don't have a lot quota
 # Attributions
 - Logo generated with DALLE 2
 - unity-tweens (https://github.com/jeffreylanters/unity-tweens)
 - HierarchyDecorator (https://github.com/WooshiiDev/HierarchyDecorator)
+- InGameDebugConsole (https://github.com/yasirkula/UnityIngameDebugConsole)
 - Markup-Attributes (https://github.com/gasgiant/Markup-Attributes#conditionals)
