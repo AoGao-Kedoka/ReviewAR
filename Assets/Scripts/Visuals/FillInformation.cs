@@ -8,9 +8,14 @@ public class FillInformation : MonoBehaviour
     public static Mutex mut = new Mutex();
     public  Place UpdatedPlace = null;
     private bool CalledOnce = false;
+    private Transform _lookAtTransform;
 
     GameObject ReviewExpandButton;
     GameObject[] ReviewObjects;
+    private void Start()
+    {
+        _lookAtTransform = FindObjectOfType<Camera>().transform;
+    }
     /// <summary>
     /// Fills the info of panel with business details
     /// </summary>
@@ -117,7 +122,7 @@ public class FillInformation : MonoBehaviour
     }
     private void Update()
     {
-
+        this.gameObject.transform.LookAt(2 * transform.position - _lookAtTransform.position);
         mut.WaitOne();
         if (UpdatedPlace != null && !CalledOnce)
         {
