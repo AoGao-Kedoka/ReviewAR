@@ -4,10 +4,7 @@
 An AR Android App overlaying business reviewing informations in the AR scene. Build with latest Geospatial API from ARFoundation Extension.
 
 # Screenshots
-<p float="left">
-<img src="./demo.gif" width=40% height=40%>
-<img src="https://user-images.githubusercontent.com/58142398/213868131-791197d7-1407-4619-b5e3-efa457ce31f6.png" width=35% height=35%>
-</p>
+<img src="./demo.gif">
 
 # Download
 Please write us for downloads cause we have limited quota.  
